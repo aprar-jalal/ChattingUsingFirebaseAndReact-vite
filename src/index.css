@@ -1,0 +1,14 @@
+*{
+  padding:0;
+  margin:0;
+  box-sizing:border-box;
+  font-family:Georgia, 'Times New Roman', Times, serif;
+}
+
+:root{
+  --Iceberg-Blue:#8BABD8;
+  --Light-Green:#78E378;
+  --Red:#F71735;
+  --Rich-Black:#011627;
+  --Navy-Grey:#707991;
+}
