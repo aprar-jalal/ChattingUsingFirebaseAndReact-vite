@@ -1,0 +1,9 @@
+.Container{
+    display:grid;
+    grid-template-columns: 1fr 3fr;
+}
+.ChatArea{
+    background-image: url("../../assets/60edf2168e2ecbf576419af3d5e1e92ce7e048ed.png");
+    background-color: var(--Iceberg-Blue);
+    height:100vh;
+}
