@@ -1,9 +1,10 @@
 import React from "react";
 import styles from "./SignUp.module.css";
-import { auth } from "../../config/firebase-config";
+import { auth, db } from "../../config/firebase-config";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { doc, setDoc } from "firebase/firestore";
 function SignUp() {
   const {
     register,
@@ -20,6 +21,16 @@ function SignUp() {
       );
 
       console.log("Created user:", userCredential.user);
+      const user = userCredential.user;
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        Name: data.name,
+        email: user.email,
+        photoURL: "avatar.webp",
+        isOnline: false,
+      });
+      
+      console.log("User added to firestore", user);
       navigate("/Chat");
     } catch (error) {
       console.log(error.message);
@@ -46,6 +57,18 @@ function SignUp() {
 
             {errors.email && (
               <p className={styles.errorMessage}>{errors.email.message}</p>
+            )}
+          </div>
+          <div className={styles.inputGroup}>
+            <input
+              type="text"
+              placeholder="Name"
+              {...register("name", {
+                required: "Name is required",
+              })}
+            />
+            {errors.name && (
+              <p className={styles.errorMessage}>{errors.name.message}</p>
             )}
           </div>
           <div className={styles.inputGroup}>
