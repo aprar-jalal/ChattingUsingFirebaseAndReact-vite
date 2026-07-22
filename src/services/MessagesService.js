@@ -11,7 +11,7 @@ import {
   getDocs,
 } from "firebase/firestore";
 import { db } from "../config/firebase-config";
-
+import { createChat } from "./ChatServices";
 export function subscribeToMessages(chatId, onSuccess, onError) {
   const q = query(
     collection(db, "Chat", chatId, "messages"),
@@ -37,65 +37,66 @@ export function subscribeToMessages(chatId, onSuccess, onError) {
   );
 }
 
-export async function createMessage(chatId, messageData) {
-  const messageRef = await addDoc(
-    collection(db, "Chat", chatId, "messages"),
+export async function createMessage(chat, currentUserId, messageText) {
+  let chatId = chat.id;
 
-    {
-      ...messageData,
-      createdAt: serverTimestamp(),
-    },
-  );
+  // إذا أول رسالة
+  if (chat.isNew) {
+    const newChat = await createChat(currentUserId, chat.userId);
 
-  await updateDoc(
-    doc(db, "Chat", chatId),
+    chatId = newChat.id;
+  }
 
-    {
-      lastMessage: messageData.text,
-      updatedAt: serverTimestamp(),
-    },
-  );
+  // إضافة الرسالة
+  await addDoc(collection(db, "Chat", chatId, "messages"), {
+    text: messageText,
+    senderId: currentUserId,
+    createdAt: serverTimestamp(),
+    seen: false,
+    verified: false,
+  });
 
-  return messageRef;
+  // تحديث معلومات الشات
+  await updateDoc(doc(db, "Chat", chatId), {
+    lastMessage: messageText,
+    updatedAt: serverTimestamp(),
+  });
+
+  return chatId;
 }
 
 export async function markMessagesAsSeen(chatId, userId) {
   const q = query(
     collection(db, "Chat", chatId, "messages"),
-
     where("seen", "==", false),
-
-    where("senderId", "!=", userId),
   );
 
   const snapshot = await getDocs(q);
 
-  const updates = snapshot.docs.map((message) => {
-    return updateDoc(
-      doc(db, "Chat", chatId, "messages", message.id),
-
-      {
+  const updates = snapshot.docs
+    .filter((message) => message.data().senderId !== userId)
+    .map((message) =>
+      updateDoc(doc(db, "Chat", chatId, "messages", message.id), {
         seen: true,
-      },
+      }),
     );
-  });
 
   await Promise.all(updates);
 }
 export function subscribeToUnreadCount(chatId, userId, onSuccess, onError) {
   const q = query(
     collection(db, "Chat", chatId, "messages"),
-
     where("seen", "==", false),
-
-    where("senderId", "!=", userId),
   );
 
   return onSnapshot(
     q,
-
     (snapshot) => {
-      onSuccess(snapshot.size);
+      const unread = snapshot.docs.filter(
+        (doc) => doc.data().senderId !== userId,
+      ).length;
+
+      onSuccess(unread);
     },
 
     (error) => {
