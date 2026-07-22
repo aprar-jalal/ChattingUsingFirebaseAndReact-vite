@@ -1,8 +1,21 @@
 import React from "react";
 import styles from "./ChatList.module.css";
-function ChatList() {
+import ChatItem from "../ChatItem/ChatItem";
+import { useChats } from "../../hooks/useChats";
+import { useAuth } from "../../Context/AuthContext";
+
+function ChatList({ setSelectedChat }) {
+const {user:currentUser}=useAuth();
+  console.log(currentUser?.email);
+  const { chats, loading, error } = useChats(currentUser?.uid);
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+  if (error) {
+    return <p>{error.message}</p>;
+  }
   return (
-    <div>
+    <div >
       <div className={styles.head}>
         <i className="fa-solid fa-bars"></i>
         <div className={styles.searchBox}>
@@ -10,24 +23,16 @@ function ChatList() {
           <input type="text" placeholder="Search" />
         </div>
       </div>
+
       <div className={styles.Chats}>
-        <div className={styles.Info}>
-          <img src="src\assets\react.svg" />
-          <div className={styles.subInfo}>
-            <div className={styles.subInfoHeading}>
-              <div className={styles.subInfoSubHeading}>
-                <h2>Name</h2>
-                <img src="src\assets\verified.png" />
-              </div>
-              <p>19:48</p>
-            </div>
-             <div className={styles.MessageInfo}>
-                <p className={styles.lastMessage}>last Message</p>
-                <p className={styles.MessageCounter}>1</p>
-             </div>
-            
-          </div>
-        </div>
+        {chats?.map((chat) => (
+          <ChatItem
+            key={chat.id}
+            chat={chat}
+            setSelectedChat={setSelectedChat}
+            currentUserId={currentUser?.uid}
+          />
+        ))}
       </div>
     </div>
   );

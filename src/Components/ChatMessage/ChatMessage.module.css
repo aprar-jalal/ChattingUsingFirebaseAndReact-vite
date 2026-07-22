@@ -2,9 +2,8 @@
     height: calc(100vh - 56px);
     display: flex;
     flex-direction: column;
-    padding: 24px;
+    padding: 24px 140px;
 }
-
 
 .messagesContainer {
     flex: 1;
@@ -13,6 +12,18 @@
     flex-direction: column;
 }
 
+.messagesContainer::-webkit-scrollbar {
+    width: 4px;
+}
+
+.messagesContainer::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+.messagesContainer::-webkit-scrollbar-track {
+    background: transparent;
+}
 
 .messages {
     margin-top: auto;
@@ -54,43 +65,44 @@
     background: #eee;
 }
 
-.inputContainer{
-    padding:15px 0;
+.inputContainer {
+    padding: 15px 0;
 }
-.inputWrapper{
+
+.inputWrapper {
     position: relative;
     width: 100%;
 }
 
-.inputWrapper input{
-    width:100%;
-    height:56px;
-    padding:8px 50px 8px 50px;
-    border-radius:12px;
-    border:1px solid #ddd;
-    outline:none;
+.inputWrapper input {
+    width: 100%;
+    height: 56px;
+    padding: 8px 50px 8px 50px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    outline: none;
 }
 
-.emojiButton{
-    position:absolute;
-    left:20px;
-    top:50%;
-    transform:translateY(-50%);
-    border:none;
-    background:none;
-    cursor:pointer;
-    font-size:18px;
-    color:var(--Iceberg-Blue);
+.emojiButton {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--Iceberg-Blue);
 }
 
-.sendButton{
-    position:absolute;
-    right:20px;
-    top:50%;
-    transform:translateY(-50%) rotate(45deg);
-    border:none;
-    background:none;
-    cursor:pointer;
-    font-size:18px;
-    color:var(--Iceberg-Blue);
+.sendButton {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--Iceberg-Blue);
 }

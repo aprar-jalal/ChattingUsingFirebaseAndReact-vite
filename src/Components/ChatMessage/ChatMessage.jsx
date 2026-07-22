@@ -1,26 +1,46 @@
-import React from "react";
+import React, { useState } from "react";
 import styles from "./ChatMessage.module.css";
+import { useAuth } from "../../Context/AuthContext";
+import { useMessages } from "../../hooks/useMessages";
+import { useSendMessage } from "../../hooks/useSendMessages";
+import { useMarkMessagesSeen } from "../../hooks/useMarkMessagesSeen";
 
-const messages = [
-  {
-    id: 1,
-    text: "OMG do you remember what you did last night?",
-    senderId: "friend",
-  },
-  {
-    id: 2,
-    text: "no haha",
-    senderId: "me",
-  },
-  {
-    id: 3,
-    text: "I don't remember anything ",
-    senderId: "me",
-  },
-];
+function ChatMessages({ selectedChat }) {
+  const { user: currentUser } = useAuth();
+  const [messageText, setMessageText] = useState("");
+  const { sendMessage: send } = useSendMessage();
+  const { messages, loading, error } = useMessages(selectedChat?.id);
+  useMarkMessagesSeen(selectedChat?.id, currentUser?.uid);
 
-function ChatMessages() {
-  const currentUserId = "me";
+  async function handleSendMessage() {
+    if (!messageText.trim()) return;
+
+    await send(
+      selectedChat.id,
+
+      {
+        text: messageText,
+        senderId: currentUser.uid,
+        seen: false,
+        verified: false,
+      },
+    );
+
+    setMessageText("");
+  }
+
+  if (!selectedChat) {
+    return <p>Select a Chat ...</p>;
+  }
+
+  if (loading) {
+    return <p>Loading messages...</p>;
+  }
+
+  if (error) {
+    return <p>{error.message}</p>;
+  }
+
   return (
     <div className={styles.chat}>
       <div className={styles.messagesContainer}>
@@ -33,7 +53,7 @@ function ChatMessages() {
             <div
               key={message.id}
               className={
-                message.senderId === currentUserId
+                message.senderId === currentUser?.uid
                   ? `${styles.message} ${styles.sent}`
                   : `${styles.message} ${styles.received}`
               }
@@ -49,14 +69,26 @@ function ChatMessages() {
           <button className={styles.emojiButton}>
             <i className="fa-regular fa-face-smile"></i>
           </button>
-          <input type="text" placeholder="Type a message..." />
 
-          <button className={styles.sendButton}>
-            <i class="fa-solid fa-location-arrow"></i>
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={messageText}
+            onChange={(e) => setMessageText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSendMessage();
+              }
+            }}
+          />
+
+          <button className={styles.sendButton} onClick={handleSendMessage}>
+            <i className="fa-solid fa-location-arrow"></i>
           </button>
         </div>
       </div>
     </div>
   );
 }
+
 export default ChatMessages;

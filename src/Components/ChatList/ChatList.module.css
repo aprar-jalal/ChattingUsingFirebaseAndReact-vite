@@ -1,120 +1,138 @@
-.head{
+.head {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap:16px;
-    padding:8px 16px;
-    height:56px;
+    gap: 16px;
+    padding: 8px 16px;
+    height: 56px;
 }
-.head i{
+
+.head i {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;
-    height:40px;
+    height: 40px;
     color: var(--Navy-Grey);
 }
-.searchBox{
-    position:relative;
-    width:276px;
+
+.searchBox {
+    position: relative;
+    width: 276px;
 }
 
-.searchBox i{
-    position:absolute;
-    left:20px;
-    top:50%;
-    transform:translateY(-50%);
+.searchBox i {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
     color: var(--Navy-Grey);
-    width:18.5;
-    height:18.5;
+    width: 18.5;
+    height: 18.5;
 }
 
-.searchBox input{
-    width:100%;
-    padding:10px 10px 10px 35px; 
-    border:none;
-    border-radius:22px;
+.searchBox input {
+    width: 100%;
+    padding: 10px 10px 10px 35px;
+    border: none;
+    border-radius: 22px;
     background-color: var(--Light-grey);
-    outline:none;
-}
-.searchBox input::placeholder{
-    padding-left:18px;
+    outline: none;
 }
 
-.Chats{
-    height:72px;
-    padding:12px 16px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap:16px;
+.searchBox input::placeholder {
+    padding-left: 18px;
 }
+
+.Chats {
+    width: 100%;
+    height: calc(100vh - 56px);
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.Chat {
+    height: 72px;
+    padding: 12px 16px;
+    width:100%;
+    margin:5px;
+}
+
 .Info {
     display: flex;
     gap: 16px;
-    width:100%;
+    width: 100%;
 }
+
 .Info img {
     width: 48px;
     border-radius: 50%;
     object-fit: contain;
 }
+
 .subInfo {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    width:100%;
+    width: 100%;
 }
-.subInfoHeading{
+
+.subInfoHeading {
     display: flex;
     gap: 4px;
     justify-content: space-between;
     align-items: center;
 }
-.subInfoSubHeading{
+
+.subInfoSubHeading {
     display: flex;
     gap: 4px;
     justify-content: center;
     align-items: center;
 }
 
-.subInfoSubHeading h2{
-     font-weight: 600;
+.subInfoSubHeading h2 {
+    font-weight: 600;
     font-size: 16px;
     line-height: 20px;
 }
-.subInfoSubHeading img{
-width: 24px;
-height: 24px;
+
+.subInfoSubHeading img {
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     object-fit: contain;
 }
 
-.subInfoHeading p{
+.subInfoHeading p {
     font-weight: 400;
     font-size: 12px;
     line-height: 18px;
     color: var(--Navy-Grey);
 }
-.MessageInfo{
+
+.MessageInfo {
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.lastMessage{
+
+.lastMessage {
     font-weight: 400;
     font-size: 14px;
     line-height: 18px;
     color: var(--Navy-Grey);
 }
-.MessageCounter{
+
+.MessageCounter {
     background-color: var(--Light-Green);
     border-radius: 100%;
-    width:18px;
-    height:18px;
+    width: 18px;
+    height: 18px;
     text-align: center;
     font-size: 12px;
-    color:white;
+    color: white;
     line-height: 16px;
     font-weight: 400;
 }
