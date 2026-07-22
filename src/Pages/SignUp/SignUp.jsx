@@ -25,11 +25,12 @@ function SignUp() {
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         Name: data.name,
+        searchName: data.name.toLowerCase(),
         email: user.email,
-        photoURL: "avatar.webp",
+        photoURL: null,
         isOnline: false,
       });
-      
+
       console.log("User added to firestore", user);
       navigate("/Chat");
     } catch (error) {

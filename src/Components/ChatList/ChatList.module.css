@@ -33,16 +33,14 @@
 
 .searchBox input {
     width: 100%;
-    padding: 10px 10px 10px 35px;
+    padding: 10px 10px 10px 55px;
     border: none;
     border-radius: 22px;
     background-color: var(--Light-grey);
     outline: none;
 }
 
-.searchBox input::placeholder {
-    padding-left: 18px;
-}
+
 
 .Chats {
     width: 100%;

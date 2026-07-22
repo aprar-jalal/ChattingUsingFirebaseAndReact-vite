@@ -1,14 +1,11 @@
 import { createMessage } from "../services/MessagesService";
 
-export function useSendMessage(){
-  async function sendMessage(chatId, messageData){
-    return await createMessage(
-      chatId,
-      messageData
-    );
+export function useSendMessage() {
+  async function sendMessage(chat, currentUserId, messageText) {
+    return await createMessage(chat, currentUserId, messageText);
   }
-  return {
-    sendMessage
-  };
 
+  return {
+    sendMessage,
+  };
 }

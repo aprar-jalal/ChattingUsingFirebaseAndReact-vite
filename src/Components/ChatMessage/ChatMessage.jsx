@@ -5,35 +5,45 @@ import { useMessages } from "../../hooks/useMessages";
 import { useSendMessage } from "../../hooks/useSendMessages";
 import { useMarkMessagesSeen } from "../../hooks/useMarkMessagesSeen";
 
-function ChatMessages({ selectedChat }) {
+function ChatMessages({ selectedChat, setSelectedChat }) {
   const { user: currentUser } = useAuth();
   const [messageText, setMessageText] = useState("");
   const { sendMessage: send } = useSendMessage();
-  const { messages, loading, error } = useMessages(selectedChat?.id);
-  useMarkMessagesSeen(selectedChat?.id, currentUser?.uid);
+const { messages, loading, error } = useMessages(
+  selectedChat?.isNew ? null : selectedChat?.id,
+);
+useMarkMessagesSeen(
+  selectedChat?.isNew ? null : selectedChat?.id,
+  currentUser?.uid,
+  messages
+);
+ async function handleSendMessage() {
+  if (!messageText.trim()) return;
 
-  async function handleSendMessage() {
-    if (!messageText.trim()) return;
+  const chatId = await send(
+    selectedChat,
+    currentUser.uid,
+    messageText
+  );
 
-    await send(
-      selectedChat.id,
 
-      {
-        text: messageText,
-        senderId: currentUser.uid,
-        seen: false,
-        verified: false,
-      },
-    );
-
-    setMessageText("");
+  // أول رسالة فقط
+  if (selectedChat.isNew) {
+    setSelectedChat({
+      ...selectedChat,
+      id: chatId,
+      isNew: false,
+    });
   }
 
+
+  setMessageText("");
+}
   if (!selectedChat) {
     return <p>Select a Chat ...</p>;
   }
 
-  if (loading) {
+  if (loading && !selectedChat?.isNew) {
     return <p>Loading messages...</p>;
   }
 
@@ -49,7 +59,7 @@ function ChatMessages({ selectedChat }) {
             <span className={styles.today}>Today</span>
           </div>
 
-          {messages.map((message) => (
+          {messages?.map((message) => (
             <div
               key={message.id}
               className={

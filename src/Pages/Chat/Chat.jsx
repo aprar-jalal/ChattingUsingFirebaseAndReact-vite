@@ -12,7 +12,10 @@ function Chat() {
       </div>
       <div className={styles.ChatArea}>
         <Navbar selectedChat={selectedChat}/>
-        <ChatMessages  selectedChat={selectedChat}/>
+        <ChatMessages 
+  selectedChat={selectedChat}
+  setSelectedChat={setSelectedChat}
+/>
         </div>
     </div>
   )

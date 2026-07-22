@@ -9,13 +9,10 @@ export function useUnreadCount(chatId, userId) {
 
     const unsubscribe = subscribeToUnreadCount(
       chatId,
-
       userId,
-
-      (data) => {
-        setCount(data);
+      (value) => {
+        setCount(value);
       },
-
       (error) => {
         console.log(error);
       },
