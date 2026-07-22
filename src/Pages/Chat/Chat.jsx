@@ -1,18 +1,18 @@
-import React from 'react'
+import React, { useState } from 'react'
 import styles from"./Chat.module.css"
 import Navbar from './../../Components/Navbar/Navbar';
 import ChatList from '../../Components/ChatList/ChatList';
 import ChatMessages from '../../Components/ChatMessage/ChatMessage';
 function Chat() {
-  
+  const [selectedChat, setSelectedChat] = useState(null);
   return (
     <div className={styles.Container}>
       <div>
-        <ChatList/>
+        <ChatList setSelectedChat={setSelectedChat}/>
       </div>
       <div className={styles.ChatArea}>
-        <Navbar />
-        <ChatMessages/>
+        <Navbar selectedChat={selectedChat}/>
+        <ChatMessages  selectedChat={selectedChat}/>
         </div>
     </div>
   )
