@@ -183,16 +183,6 @@ Used features:
 
 ---
 
-## react-firebase-hooks
-
-Used to simplify Firebase state management inside React.
-
-Example:
-
-- Authentication state handling.
-- Firebase subscriptions.
-
----
 
 ## react-hook-form
 
