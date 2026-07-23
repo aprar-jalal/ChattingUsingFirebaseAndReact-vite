@@ -5,26 +5,20 @@ import { useChats } from "../../hooks/useChats";
 import { useAuth } from "../../Context/AuthContext";
 import { useSearchUsers } from "../../hooks/useSearchUsers";
 import { useCreateChat } from "../../hooks/useCreateChat";
+import avatar from "../../assets/avatar.webp";
 
 function ChatList({ setSelectedChat }) {
   const { user: currentUser } = useAuth();
   const [searchText, setSearchText] = useState("");
   const { users: searchResults, search, clearSearch } = useSearchUsers();
   const { openChat } = useCreateChat();
-async function handleOpenChat(user) {
+  async function handleOpenChat(user) {
+    const chat = await openChat(currentUser.uid, user.id);
 
-  const chat = await openChat(
-    currentUser.uid,
-    user.id
-  );
-
-
-  setSelectedChat(chat);
-
-  clearSearch();
-  setSearchText("");
-
-}
+    setSelectedChat(chat);
+    clearSearch();
+    setSearchText("");
+  }
 
   const { chats, loading, error } = useChats(currentUser?.uid);
 
@@ -60,8 +54,17 @@ async function handleOpenChat(user) {
       {searchResults.length > 0 && (
         <div className={styles.SearchResults}>
           {searchResults.map((user) => (
-            <div key={user.id} onClick={() => handleOpenChat(user)}>
-              {user.Name}
+            <div
+              key={user.id}
+              onClick={() => handleOpenChat(user)}
+              className={styles.searchUser}
+            >
+              <img
+                src={user.photoURL || avatar}
+                className={styles.searchAvatar}
+              />
+
+              <span>{user.Name}</span>
             </div>
           ))}
         </div>

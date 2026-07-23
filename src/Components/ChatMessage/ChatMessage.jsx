@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./ChatMessage.module.css";
+
 import { useAuth } from "../../Context/AuthContext";
 import { useMessages } from "../../hooks/useMessages";
 import { useSendMessage } from "../../hooks/useSendMessages";
@@ -7,43 +8,52 @@ import { useMarkMessagesSeen } from "../../hooks/useMarkMessagesSeen";
 
 function ChatMessages({ selectedChat, setSelectedChat }) {
   const { user: currentUser } = useAuth();
-  const [messageText, setMessageText] = useState("");
-  const { sendMessage: send } = useSendMessage();
-const { messages, loading, error } = useMessages(
-  selectedChat?.isNew ? null : selectedChat?.id,
-);
-useMarkMessagesSeen(
-  selectedChat?.isNew ? null : selectedChat?.id,
-  currentUser?.uid,
-  messages
-);
- async function handleSendMessage() {
-  if (!messageText.trim()) return;
 
-  const chatId = await send(
-    selectedChat,
-    currentUser.uid,
-    messageText
+  const [messageText, setMessageText] = useState("");
+
+  const messagesEndRef = useRef(null);
+
+  const { sendMessage: send } = useSendMessage();
+
+  const { messages, loading, error } = useMessages(
+    selectedChat?.isNew ? null : selectedChat?.id,
+    currentUser?.uid,
   );
 
+  // تحويل الرسائل إلى seen لما أفتح الشات
+  useMarkMessagesSeen(
+    selectedChat?.isNew ? null : selectedChat?.id,
+    currentUser?.uid,
+  );
 
-  // أول رسالة فقط
-  if (selectedChat.isNew) {
-    setSelectedChat({
-      ...selectedChat,
-      id: chatId,
-      isNew: false,
+  // Scroll لآخر رسالة
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
     });
+  }, [messages]);
+
+  async function handleSendMessage() {
+    if (!messageText.trim()) return;
+
+    const chatId = await send(selectedChat, currentUser.uid, messageText);
+
+    if (selectedChat.isNew) {
+      setSelectedChat({
+        ...selectedChat,
+        id: chatId,
+        isNew: false,
+      });
+    }
+
+    setMessageText("");
   }
 
-
-  setMessageText("");
-}
   if (!selectedChat) {
-    return <p>Select a Chat ...</p>;
+    return null;
   }
 
-  if (loading && !selectedChat?.isNew) {
+  if (loading && !selectedChat.isNew) {
     return <p>Loading messages...</p>;
   }
 
@@ -68,9 +78,33 @@ useMarkMessagesSeen(
                   : `${styles.message} ${styles.received}`
               }
             >
-              {message.text}
+              <span className={styles.text}>{message.text}</span>
+
+              {/* status يظهر فقط لرسائلي */}
+              {message.senderId === currentUser?.uid && (
+                <span className={styles.status}>
+                  {message.status === "sent" && (
+                    <i className="fa-solid fa-check"></i>
+                  )}
+
+                  {message.status === "delivered" && (
+                    <i
+                      className={`fa-solid fa-check-double ${styles.delivered}`}
+                    ></i>
+                  )}
+
+                  {message.status === "seen" && (
+                    <i
+                      className={`fa-solid fa-check-double ${styles.seen}`}
+                    ></i>
+                  )}
+                </span>
+              )}
             </div>
           ))}
+
+          {/* نقطة النزول للآخر */}
+          <div ref={messagesEndRef}></div>
         </div>
       </div>
 

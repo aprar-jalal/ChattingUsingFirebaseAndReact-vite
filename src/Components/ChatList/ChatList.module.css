@@ -134,3 +134,18 @@
     line-height: 16px;
     font-weight: 400;
 }
+.searchUser {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+
+.searchAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
