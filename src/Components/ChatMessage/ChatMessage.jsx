@@ -16,17 +16,17 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
   const { sendMessage: send } = useSendMessage();
 
   const { messages, loading, error } = useMessages(
-    selectedChat?.isNew ? null : selectedChat?.id,
-    currentUser?.uid,
-  );
+  selectedChat?.id,
+  currentUser?.uid,
+);
 
-  // تحويل الرسائل إلى seen لما أفتح الشات
+  //when i open the chat change the status to the seen status
   useMarkMessagesSeen(
-    selectedChat?.isNew ? null : selectedChat?.id,
-    currentUser?.uid,
-  );
+  selectedChat?.id,
+  currentUser?.uid,
+);
 
-  // Scroll لآخر رسالة
+  // Scroll to the last message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
       behavior: "smooth",
@@ -34,26 +34,20 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
   }, [messages]);
 
   async function handleSendMessage() {
-    if (!messageText.trim()) return;
-
-    const chatId = await send(selectedChat, currentUser.uid, messageText);
-
-    if (selectedChat.isNew) {
-      setSelectedChat({
-        ...selectedChat,
-        id: chatId,
-        isNew: false,
-      });
-    }
-
-    setMessageText("");
-  }
+  if (!messageText.trim()) return;
+  await send(
+    selectedChat,
+    currentUser.uid,
+    messageText
+  );
+  setMessageText("");
+}
 
   if (!selectedChat) {
     return null;
   }
 
-  if (loading && !selectedChat.isNew) {
+  if (loading) {
     return <p>Loading messages...</p>;
   }
 

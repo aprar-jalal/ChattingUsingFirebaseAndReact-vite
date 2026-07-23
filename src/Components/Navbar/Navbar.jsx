@@ -7,12 +7,15 @@ import { formatLastSeen } from "../../services/userService";
 import { usePresence } from "../../hooks/usePresence";
 
 function Navbar({ selectedChat }) {
+  // who is the current user
   const { user: currentUser } = useAuth();
-  
+  // the other user id
   const otherUserId = selectedChat?.members?.find(
     (id) => id !== currentUser?.uid,
   );
-const presence = usePresence(otherUserId);
+ // the other user status
+  const presence = usePresence(otherUserId);
+  // fetching other user data
   const { user: firestoreUser } = useUser(otherUserId);
 
   const user = selectedChat?.user || firestoreUser;
@@ -20,8 +23,6 @@ const presence = usePresence(otherUserId);
   if (!selectedChat) {
     return <div className={styles.navHidden}></div>;
   }
-  console.log("selectedChat", selectedChat);
-  console.log("user", user);
   return (
     <div className={styles.nav}>
       <div className={styles.Info}>

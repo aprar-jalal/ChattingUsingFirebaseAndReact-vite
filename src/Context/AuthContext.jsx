@@ -16,11 +16,13 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // onAuthStateChanged it's a listner that listnse to the user status logggin loggout...
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
       setLoading(false);
       if (!currentUser) return;
       try {
+        //this is for the real time database it changes the user status from online to offline
         const statusRef = ref(rtdb, `status/${currentUser.uid}`);
         await set(statusRef, {
           state: "online",

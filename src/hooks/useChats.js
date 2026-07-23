@@ -18,6 +18,7 @@ export function useChats(uid){
         setLoading(false);
       }
     );
+    //its a listner so we need to terminate it by the return
     return unsubscribe;
   },[uid]);
   return {

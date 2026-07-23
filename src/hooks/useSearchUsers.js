@@ -14,9 +14,7 @@ export function useSearchUsers() {
 
     try {
       setLoading(true);
-
       const data = await searchUserByName(name);
-
       setUsers(data);
     } catch (error) {
       setError(error);
