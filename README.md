@@ -1,22 +1,25 @@
-# 💬 Chatting Website
+# Firebase Real-Time Chat Application 💬
 
-A real-time chatting application built using React and Firebase.  
-The application allows users to register, search for other users, start conversations, send messages, and track unread messages in real time.
+A real-time chat application built using **React** and **Firebase**.
+The project focuses on implementing a modern chat system with authentication, real-time messaging, user presence, message status tracking, and a clean code architecture.
 
 ---
 
-# 🚀 Features
+## 🚀 Project Overview
 
-- User authentication using Firebase Authentication.
-- Create a user profile after registration.
-- Search for users by name.
-- Start a new conversation with another user.
-- Real-time messaging using Firebase Firestore.
-- Display the latest message in chat list.
-- Track unread messages count.
-- Mark messages as seen when opening a chat.
-- Display user information in Navbar.
-- Real-time updates without refreshing the page.
+This project is a real-time messaging application that allows users to:
+
+- Create an account and login securely.
+- Search for other users.
+- Start conversations.
+- Send and receive messages instantly.
+- See users' online/offline status.
+- Track message delivery status.
+- Track when messages are seen.
+- Display unread message counters.
+- Update data in real time using Firebase listeners.
+
+The main goal of this project was to understand Firebase deeply and build a scalable frontend architecture.
 
 ---
 
@@ -24,296 +27,407 @@ The application allows users to register, search for other users, start conversa
 
 ## Frontend
 
-### React
-Used for building reusable UI components and managing the application interface.
+- React.js
+- Vite
+- React Router
+- React Hook Form
+- CSS Modules
+- Font Awesome Icons
 
-### Vite
-Used as the development environment and build tool for a fast React application.
+## Backend / Database
 
-### React Router DOM
-Used for navigation between application pages.
+- Firebase Authentication
+- Firebase Firestore
+- Firebase Realtime Database
 
-### CSS Modules
-Used for component-level styling and preventing CSS conflicts.
+## Firebase Features Used
 
-### React Hook Form
-Used for handling forms and validation, especially user registration.
-
----
-
-# 🔥 Firebase Services
-
-## Firebase Authentication
-
-Used for:
-
-- User registration.
-- User login.
-- Managing authenticated users.
+- Authentication with Email & Password
+- Firestore CRUD operations
+- Firestore `onSnapshot` for real-time updates
+- Realtime Database Presence System
+- Firebase Timestamps
 
 ---
 
-## Cloud Firestore
+# 📂 Project Structure
 
-Used as the application's database.
-
-Firestore stores:
-
-### Users Collection
-
-Stores user information:
-
-
-users
-|
-userId
-|
-├── Name
-├── email
-├── photoURL
-├── searchName
-└── isOnline
-
-
----
-
-### Chat Collection
-
-Stores conversations:
-
-
-Chat
-|
-chatId
-|
-├── members
-├── lastMessage
-└── updatedAt
-
-
----
-
-### Messages Subcollection
-
-Stores messages inside each chat:
-
-
-Chat
-|
-chatId
-|
-messages
-|
-messageId
-|
-├── text
-├── senderId
-├── createdAt
-└── seen
-
-
----
-
-# 📚 Project Architecture
-
-The project follows a layered architecture:
-
-
-Components
-|
-↓
-Hooks
-|
-↓
-Services
-|
-↓
-Firebase
-
-
----
-
-# 📂 Folder Structure
-
-
+```
 src
 │
-├── Components
-│ ├── Chat
-│ ├── ChatList
-│ ├── ChatItem
-│ ├── ChatMessage
-│ ├── Navbar
-│ └── SignUp
-│
-├── hooks
-│ ├── useChats.js
-│ ├── useMessages.js
-│ ├── useSendMessages.js
-│ ├── useSearchUsers.js
-│ ├── useUnreadCount.js
-│ └── useMarkMessagesSeen.js
-│
-├── services
-│ ├── ChatServices.js
-│ ├── MessagesService.js
-│ └── UserService.js
+├── components
+│   ├── ChatList
+│   ├── ChatMessage
+│   ├── ChatItem
+│   ├── Navbar
+│   └── ...
 │
 ├── Context
-│ └── AuthContext.jsx
+│   └── AuthContext.jsx
+│
+├── hooks
+│   ├── useAuth
+│   ├── useMessages
+│   ├── useSendMessage
+│   ├── useChats
+│   ├── useSearchUsers
+│   └── ...
+│
+├── services
+│   ├── MessagesService.js
+│   ├── ChatServices.js
+│   └── userService.js
 │
 ├── config
-│ └── firebase-config.js
+│   └── firebase-config.js
 │
 └── App.jsx
-
-
----
-
-# 🧩 Main Libraries
-
-## firebase
-
-Firebase SDK used to connect React with Firebase services.
-
-Used features:
-
-- Authentication
-- Firestore Database
+```
 
 ---
 
+# 🏗️ Architecture
 
-## react-hook-form
+The project follows a separation of concerns approach.
+
+## Components
+
+Responsible only for:
+
+- Rendering UI
+- Handling user interaction
+- Displaying data
+
+---
+
+## Services
+
+Responsible for Firebase logic:
+
+Examples:
+
+- Creating chats
+- Sending messages
+- Updating message status
+- Searching users
+
+This keeps Firebase operations away from UI components.
+
+---
+
+## Custom Hooks
+
+Custom hooks connect components with services.
+
+Examples:
+
+### useMessages
+
+Responsible for:
+
+- Listening to messages in real time.
+- Managing loading and error states.
+
+---
+
+### useSendMessage
+
+Responsible for:
+
+- Sending messages.
+- Creating chats when needed.
+
+---
+
+### useSearchUsers
+
+Responsible for:
+
+- Searching users by name.
+- Managing search results.
+
+---
+
+# 🔐 Authentication System
+
+Firebase Authentication is used for user management.
+
+Features:
+
+- Register new users.
+- Login users.
+- Detect authentication state.
+
+Authentication state is managed globally using:
+
+```
+AuthContext
+```
+
+Example:
+
+```javascript
+onAuthStateChanged(auth, callback)
+```
+
+This keeps user information available throughout the application.
+
+---
+
+# 👥 Users Collection
+
+Each user has a document inside Firestore:
+
+```
+users
+ |
+ |-- userId
+      |
+      ├── Name
+      ├── email
+      ├── photoURL
+      ├── isOnline
+      └── lastSeen
+```
+
+---
+
+# 💬 Chat System
+
+Chats are stored inside Firestore:
+
+```
+Chat
+ |
+ |-- chatId
+      |
+      ├── members[]
+      ├── lastMessage
+      ├── updatedAt
+      |
+      └── messages
+            |
+            |-- messageId
+                  |
+                  ├── text
+                  ├── senderId
+                  ├── createdAt
+                  └── status
+```
+
+---
+
+# 📩 Message Status System
+
+Messages use a status-based system:
+
+```
+sent
+ |
+ v
+delivered
+ |
+ v
+seen
+```
+
+## Sent
+
+The message was created successfully.
+
+Displayed as:
+
+✓
+
+---
+
+## Delivered
+
+The message reached the receiver.
+
+Displayed as:
+
+✓✓ (gray)
+
+---
+
+## Seen
+
+The receiver opened the chat.
+
+Displayed as:
+
+✓✓ (green)
+
+---
+
+# ⚡ Real-Time Features
+
+The project uses Firebase listeners:
+
+## Firestore onSnapshot
 
 Used for:
 
-- Form handling.
-- Input validation.
-- Managing form states.
+- Messages updates.
+- Chats updates.
+- User changes.
+
+Example:
+
+```javascript
+onSnapshot(query, callback)
+```
+
+Whenever data changes in Firebase, the UI updates automatically.
 
 ---
 
-## react-router-dom
+# 🟢 Online / Offline Presence
 
-Used for:
+User presence is implemented using:
 
-- Page navigation.
-- Routing between application pages.
+```
+Firebase Realtime Database
+```
 
----
+because it provides better support for connection status.
 
-# 🔄 Real-Time Data Flow
+The system tracks:
 
-## Sending Message
-
-
-User clicks Send
-|
-↓
-ChatMessage Component
-|
-↓
-useSendMessage Hook
-|
-↓
-MessagesService
-|
-↓
-Firestore addDoc()
-
+- Online users.
+- Offline users.
+- Last seen time.
 
 ---
 
-## Receiving Messages
+# 🔎 User Search
 
+Users can search for other users by name.
 
-Firestore onSnapshot()
-|
-↓
-MessagesService
-|
-↓
-useMessages Hook
-|
-↓
-ChatMessage Component
+Search flow:
 
-
----
-
-# 🔔 Unread Messages System
-
-Unread messages are calculated using:
-
-
-seen == false
-AND
-senderId != currentUser
-
-
-When the user opens the chat:
-
-
-useMarkMessagesSeen
-|
-↓
-markMessagesAsSeen()
-|
-↓
-Update seen = true
-
+```
+Input
+ |
+ v
+useSearchUsers Hook
+ |
+ v
+userService
+ |
+ v
+Firestore Query
+ |
+ v
+Search Results
+```
 
 ---
 
-# 🔐 Authentication Context
+# 🔔 Unread Messages Counter
 
-The application uses AuthContext to provide the authenticated user globally.
+Unread counter depends on message status.
 
-Instead of calling Firebase authentication in every component, the user state is stored once:
+Logic:
 
-```jsx
-<AuthContext.Provider value={{user, loading}}>
+- Messages with status:
+  - sent
+  - delivered
 
-Components can access:
+are counted as unread.
 
-const { user } = useAuth();
-⚙️ Installation
+When the chat is opened:
 
-Clone the repository:
+```
+status → seen
+```
 
+and the counter disappears.
+
+---
+
+# 📦 Installation
+
+Clone the project:
+
+```bash
 git clone <repository-url>
+```
 
 Install dependencies:
 
+```bash
 npm install
+```
 
 Run the project:
 
+```bash
 npm run dev
-🔧 Environment Setup
+```
 
-Create a Firebase project and add your Firebase configuration:
+---
 
+# 🔥 Firebase Configuration
+
+Create a Firebase project and enable:
+
+- Authentication
+- Firestore Database
+- Realtime Database
+
+Add your Firebase configuration:
+
+```
 src/config/firebase-config.js
+```
 
-Add:
+Example:
 
-Firebase API Key
-Auth Domain
-Project ID
-Storage Bucket
-Messaging Sender ID
-App ID
-🎯 Future Improvements
-Add image/file sharing.
-Add typing indicator.
-Add online/offline status tracking.
-Add message reactions.
-Add notifications.
-Add message deletion.
-Add message editing.
-👩‍💻 Author
+```javascript
+const firebaseConfig = {
+ apiKey:"",
+ authDomain:"",
+ projectId:"",
+ storageBucket:"",
+ messagingSenderId:"",
+ appId:""
+}
+```
+
+---
+
+# 📚 What I Learned
+
+During this project I learned:
+
+- How Firebase Authentication works.
+- How Firestore CRUD operations work.
+- How to build real-time applications using snapshots.
+- How to structure React projects professionally.
+- How to separate UI logic from business logic.
+- How to manage global authentication state.
+- How to implement message states like WhatsApp.
+- How Firebase Realtime Database handles presence.
+
+---
+
+# 🔮 Future Improvements
+
+Possible improvements:
+
+- Image and file sharing.
+- Typing indicator.
+- Push notifications.
+- Message reactions.
+- Group chats.
+- Better mobile responsiveness.
+- Message pagination.
+
+---
+
+# 👩‍💻 Author
 
 Aprar Ismail
 
