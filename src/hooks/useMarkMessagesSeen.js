@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 import { markMessagesAsSeen } from "../services/MessagesService";
 
-export function useMarkMessagesSeen(chatId, userId, messages) {
+export function useMarkMessagesSeen(chatId, userId) {
   useEffect(() => {
-    if (!chatId || !userId || !messages) return;
+    if (!chatId || !userId) return;
 
     markMessagesAsSeen(chatId, userId);
-  }, [chatId, userId, messages.length]);
+  }, [chatId, userId]);
 }
