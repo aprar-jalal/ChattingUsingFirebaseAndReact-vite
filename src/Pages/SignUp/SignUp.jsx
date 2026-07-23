@@ -29,6 +29,7 @@ function SignUp() {
         email: user.email,
         photoURL: null,
         isOnline: false,
+        verified:false,
       });
 
       console.log("User added to firestore", user);

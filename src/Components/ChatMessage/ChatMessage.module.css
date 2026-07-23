@@ -106,3 +106,32 @@
     font-size: 18px;
     color: var(--Iceberg-Blue);
 }
+
+.message {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+
+
+
+.status {
+    margin-left: 5px;
+    font-size: 12px;
+}
+
+
+.status i {
+    font-size: 11px;
+}
+
+
+.delivered {
+    color: #9ca3af;
+}
+
+
+.seen {
+    color: #22c55e;
+}

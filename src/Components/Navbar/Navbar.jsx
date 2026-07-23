@@ -3,33 +3,35 @@ import styles from "./Navbar.module.css";
 import avatar from "../../assets/avatar.webp";
 import { useUser } from "../../hooks/useUser";
 import { useAuth } from "../../Context/AuthContext";
+import { formatLastSeen } from "../../services/userService";
+import { usePresence } from "../../hooks/usePresence";
 
 function Navbar({ selectedChat }) {
   const { user: currentUser } = useAuth();
-
+  
   const otherUserId = selectedChat?.members?.find(
     (id) => id !== currentUser?.uid,
   );
-
+const presence = usePresence(otherUserId);
   const { user: firestoreUser } = useUser(otherUserId);
 
   const user = selectedChat?.user || firestoreUser;
 
   if (!selectedChat) {
-    return <div className={styles.nav}>Select Chat</div>;
+    return <div className={styles.navHidden}></div>;
   }
-console.log("selectedChat", selectedChat);
-console.log("user", user);
+  console.log("selectedChat", selectedChat);
+  console.log("user", user);
   return (
     <div className={styles.nav}>
       <div className={styles.Info}>
-        <img src={ avatar} />
+        <img src={avatar} />
 
         <div className={styles.subInfo}>
           <h2>{user?.Name || "Unknown"}</h2>
 
           <p className={styles.lastSeen}>
-            {user?.isOnline ? "Online" : "Offline"}
+            {presence?.state === "online" ? "Online" :  formatLastSeen(presence?.lastChanged)}
           </p>
         </div>
       </div>
