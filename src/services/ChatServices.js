@@ -16,7 +16,7 @@ export function subscribeToUserChats(uid, onSuccess, onError) {
     where("members", "array-contains", uid),
     orderBy("updatedAt", "desc"),
   );
-  //for real time messaging
+  //for real time messaging it returns the chats that the user has
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
@@ -38,20 +38,20 @@ export async function createChat(currentUserId, otherUserId) {
   const q = query(chatsRef, where("members", "array-contains", currentUserId));
 
   const snapshot = await getDocs(q);
-
+  //searching if the user has a chat with the otherUser or not
   const existingChat = snapshot.docs.find((doc) => {
     const members = doc.data().members;
 
     return members.includes(otherUserId);
   });
-
+  //if Yes just return this chat
   if (existingChat) {
     return {
       id: existingChat.id,
       ...existingChat.data(),
     };
   }
-
+ // if Not return a new Chat with them
   const newChat = await addDoc(chatsRef, {
     members: [currentUserId, otherUserId],
     lastMessage: "",

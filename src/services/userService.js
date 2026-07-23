@@ -14,10 +14,9 @@ import { db } from "../config/firebase-config";
 
 export function subscribeToUser(userId, onSuccess, onError) {
   const userRef = doc(db, "users", userId);
-
+  // returns users data according to his id
   return onSnapshot(
     userRef,
-
     (snapshot) => {
       if (snapshot.exists()) {
         onSuccess({
@@ -40,7 +39,9 @@ export async function searchUserByName(name) {
 
   const q = query(
     collection(db, "users"),
+    // >= start with the first letter 
     where("searchName", ">=", search),
+    // <= start with the first letter and so on
     where("searchName", "<=", search + "\uf8ff"),
   );
 

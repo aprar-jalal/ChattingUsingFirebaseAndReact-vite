@@ -7,9 +7,6 @@ import Login from "./Pages/Login/Login.jsx";
 import { useAuth } from "./Context/AuthContext.jsx";
 function App() {
  const {user, loading} = useAuth();
-
-console.log(user);
-console.log(loading);
   return (
     
     <>
