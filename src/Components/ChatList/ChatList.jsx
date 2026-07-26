@@ -6,12 +6,14 @@ import { useAuth } from "../../Context/AuthContext";
 import { useSearchUsers } from "../../hooks/useSearchUsers";
 import { useCreateChat } from "../../hooks/useCreateChat";
 import avatar from "../../assets/avatar.webp";
+import Settings from "../Settings/Settings";
 
 function ChatList({ setSelectedChat }) {
   const { user: currentUser } = useAuth();
   const [searchText, setSearchText] = useState("");
   const { users: searchResults, search, clearSearch } = useSearchUsers();
   const { openChat } = useCreateChat();
+  const [showSettings, setShowSettings] = useState(false);
   async function handleOpenChat(user) {
     const chat = await openChat(currentUser.uid, user.id);
 
@@ -51,7 +53,7 @@ function ChatList({ setSelectedChat }) {
         </div>
       </div>
 
-      {searchResults.length > 0 && (
+      {!showSettings && searchResults.length > 0 && (
         <div className={styles.SearchResults}>
           {searchResults.map((user) => (
             <div
@@ -69,16 +71,35 @@ function ChatList({ setSelectedChat }) {
           ))}
         </div>
       )}
-
-      <div className={styles.Chats}>
-        {chats?.map((chat) => (
-          <ChatItem
-            key={chat.id}
-            chat={chat}
-            setSelectedChat={setSelectedChat}
-            currentUserId={currentUser.uid}
-          />
-        ))}
+      {!showSettings ? (
+        <div className={styles.Chats}>
+          {chats?.map((chat) => (
+            <ChatItem
+              key={chat.id}
+              chat={chat}
+              setSelectedChat={setSelectedChat}
+              currentUserId={currentUser.uid}
+            />
+          ))}
+        </div>
+      ) : (
+        <Settings userId={currentUser.uid} />
+      )}
+      <div
+        className={styles.Settings}
+        onClick={() => setShowSettings((prev) => !prev)}
+      >
+        <span>
+          {showSettings ? (
+            <span>
+              <i className="fa-regular fa-comment-dots"></i>Chats
+            </span>
+          ) : (
+            <span>
+              <i className="fa-solid fa-gear"></i>Settings
+            </span>
+          )}
+        </span>
       </div>
     </div>
   );

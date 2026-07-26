@@ -8,6 +8,7 @@ import {
   orderBy,
   startAt,
   endAt,
+  updateDoc,
 } from "firebase/firestore";
 
 import { db } from "../config/firebase-config";
@@ -69,4 +70,14 @@ export function formatLastSeen(timestamp) {
     return `Last seen ${Math.floor(diff / 3600)} hour ago`;
 
   return `Last seen ${Math.floor(diff / 86400)} day ago`;
+}
+export async function UpdateUser(userId, data) {
+  const userRef = doc(db, "users", userId);
+
+  await updateDoc(userRef, {
+    Name: data.name,
+    searchName: data.name.toLowerCase(),
+    number: data.number,
+    photoURL: data.photoURL,
+  });
 }
