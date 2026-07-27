@@ -95,11 +95,10 @@
     color: var(--Iceberg-Blue);
 }
 
-.sendButton {
+.recordButton {
     position: absolute;
     right: 20px;
-    top: 50%;
-    transform: translateY(-50%) rotate(45deg);
+    top: 30%;
     border: none;
     background: none;
     cursor: pointer;
@@ -112,9 +111,6 @@
     align-items: flex-end;
     gap: 6px;
 }
-
-
-
 
 .status {
     margin-left: 5px;

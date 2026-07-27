@@ -5,6 +5,8 @@ import { useAuth } from "../../Context/AuthContext";
 import { useMessages } from "../../hooks/useMessages";
 import { useSendMessage } from "../../hooks/useSendMessages";
 import { useMarkMessagesSeen } from "../../hooks/useMarkMessagesSeen";
+import { useAudioRecorder } from "../../hooks/useAudioRecorder";
+import { useSendAudioMessage } from "../../hooks/useSendAudioMessage";
 
 function ChatMessages({ selectedChat, setSelectedChat }) {
   const { user: currentUser } = useAuth();
@@ -16,15 +18,26 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
   const { sendMessage: send } = useSendMessage();
 
   const { messages, loading, error } = useMessages(
-  selectedChat?.id,
-  currentUser?.uid,
-);
+    selectedChat?.id,
+    currentUser?.uid,
+  );
+  
+  // to be sure that this is audio is sent to this chat even if the user changes between chats before the audio is sent
+  const recordingChatRef = useRef(null);
+
+  //Recording
+  const { startRecording, stopRecording, isRecording, audioBlob, clearAudio } =
+    useAudioRecorder();
+
+  //sending recored into firebase
+  const {
+    sendAudio,
+    loading: audioUploading,
+    error: audioError,
+  } = useSendAudioMessage();
 
   //when i open the chat change the status to the seen status
-  useMarkMessagesSeen(
-  selectedChat?.id,
-  currentUser?.uid,
-);
+  useMarkMessagesSeen(selectedChat?.id, currentUser?.uid);
 
   // Scroll to the last message
   useEffect(() => {
@@ -34,14 +47,42 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
   }, [messages]);
 
   async function handleSendMessage() {
-  if (!messageText.trim()) return;
-  await send(
-    selectedChat,
-    currentUser.uid,
-    messageText
-  );
-  setMessageText("");
-}
+    if (!messageText.trim()) return;
+
+    await send(selectedChat, currentUser.uid, {
+      type: "text",
+      text: messageText,
+      audioURL: null,
+    });
+
+    setMessageText("");
+  }
+
+  async function handleRecording() {
+    if (isRecording) {
+      await stopRecording();
+    } else {
+      recordingChatRef.current = selectedChat;
+      startRecording();
+    }
+  }
+  useEffect(() => {
+    if (!audioBlob || !recordingChatRef.current || !currentUser?.uid) {
+      return;
+    }
+    async function handleAudioMessage() {
+      try {
+        const chat = recordingChatRef.current;
+        await sendAudio(chat, currentUser.uid, audioBlob);
+        console.log("Audio message sent successfully");
+        clearAudio();
+        recordingChatRef.current = null;
+      } catch (error) {
+        console.error("Audio message failed:", error);
+      }
+    }
+    handleAudioMessage();
+  }, [audioBlob, currentUser?.uid]);
 
   if (!selectedChat) {
     return null;
@@ -51,7 +92,7 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
     return <p>Loading messages...</p>;
   }
 
-  if (error) {
+  if (error || audioError) {
     return <p>{error.message}</p>;
   }
 
@@ -72,7 +113,17 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
                   : `${styles.message} ${styles.received}`
               }
             >
-              <span className={styles.text}>{message.text}</span>
+              {message.type === "text" && (
+                <span className={styles.text}>{message.text}</span>
+              )}
+
+              {message.type === "audio" && (
+                <audio
+                  controls
+                  src={message.audioURL}
+                  className={styles.audio}
+                />
+              )}
 
               {/* status يظهر فقط لرسائلي */}
               {message.senderId === currentUser?.uid && (
@@ -120,8 +171,21 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
             }}
           />
 
-          <button className={styles.sendButton} onClick={handleSendMessage}>
-            <i className="fa-solid fa-location-arrow"></i>
+          <button
+            className={styles.recordButton}
+            type="button"
+            disabled={audioUploading}
+            onClick={handleRecording}
+          >
+            <i
+              className={
+                audioUploading
+                  ? "fa-solid fa-spinner fa-spin"
+                  : isRecording
+                    ? "fa-solid fa-stop"
+                    : "fa-solid fa-microphone"
+              }
+            ></i>
           </button>
         </div>
       </div>

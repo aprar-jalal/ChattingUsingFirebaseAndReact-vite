@@ -28,6 +28,7 @@ export function subscribeToMessages(chatId, onSuccess, onError, currentUserId) {
         id: doc.id,
         ...doc.data(),
       }));
+      onSuccess(messages);
       // sent --> delivered
       //if the message is sent to user mark it as delevered
       const updates = snapshot.docs
@@ -42,7 +43,6 @@ export function subscribeToMessages(chatId, onSuccess, onError, currentUserId) {
           }),
         );
       await Promise.all(updates);
-      onSuccess(messages);
     },
     (error) => {
       onError(error);
@@ -50,17 +50,23 @@ export function subscribeToMessages(chatId, onSuccess, onError, currentUserId) {
   );
 }
 
-export async function createMessage(chat, currentUserId, messageText) {
-  let chatId = chat.id;
+export async function createMessage(chat, currentUserId, messageData) {
+  const chatId = chat.id;
+
   await addDoc(collection(db, "Chat", chatId, "messages"), {
-    text: messageText,
+    type: messageData.type,
+    text: messageData.text || null,
+    audioURL: messageData.audioURL || null,
     senderId: currentUserId,
     createdAt: serverTimestamp(),
     status: "sent",
   });
-  // to update the last message to the newly sent message
+
   await updateDoc(doc(db, "Chat", chatId), {
-    lastMessage: messageText,
+    lastMessage:
+      messageData.type === "text"
+        ? messageData.text
+        : "🎤 Audio message",
     updatedAt: serverTimestamp(),
   });
 

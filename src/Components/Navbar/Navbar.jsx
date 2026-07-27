@@ -26,7 +26,7 @@ function Navbar({ selectedChat }) {
   return (
     <div className={styles.nav}>
       <div className={styles.Info}>
-        <img src={avatar} />
+        <img src={user?.photoURL||avatar} />
 
         <div className={styles.subInfo}>
           <h2>{user?.Name || "Unknown"}</h2>
