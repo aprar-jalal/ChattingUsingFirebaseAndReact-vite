@@ -1,0 +1,137 @@
+.chat {
+    height: calc(100vh - 56px);
+    display: flex;
+    flex-direction: column;
+    padding: 24px 140px;
+}
+
+.messagesContainer {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.messagesContainer::-webkit-scrollbar {
+    width: 4px;
+}
+
+.messagesContainer::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+}
+
+.messagesContainer::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.date {
+    text-align: center;
+    margin: 20px 0;
+    font-size: 14px;
+}
+
+.today {
+    background: #3D70B899;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+}
+
+
+.message {
+    padding: 10px 15px;
+    border-radius: 15px;
+    max-width: 402px;
+}
+
+
+.sent {
+    align-self: flex-end;
+    background: var(--Light-Green);
+}
+
+
+.received {
+    align-self: flex-start;
+    background: #eee;
+}
+
+.inputContainer {
+    padding: 15px 0;
+}
+
+.inputWrapper {
+    position: relative;
+    width: 100%;
+}
+
+.inputWrapper input {
+    width: 100%;
+    height: 56px;
+    padding: 8px 50px 8px 50px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    outline: none;
+}
+
+.emojiButton {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--Iceberg-Blue);
+}
+
+.sendButton {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--Iceberg-Blue);
+}
+
+.message {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+}
+
+
+
+
+.status {
+    margin-left: 5px;
+    font-size: 12px;
+}
+
+
+.status i {
+    font-size: 11px;
+}
+
+
+.delivered {
+    color: #9ca3af;
+}
+
+
+.seen {
+    color: #22c55e;
+}

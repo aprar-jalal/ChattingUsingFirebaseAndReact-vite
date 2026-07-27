@@ -1,9 +1,11 @@
 import React from "react";
 import styles from "./SignUp.module.css";
-import { auth } from "../../config/firebase-config";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../../config/firebase-config";
+import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { doc, setDoc } from "firebase/firestore";
+import { uploadPhoto } from "../../services/imageService";
 function SignUp() {
   const {
     register,
@@ -12,6 +14,8 @@ function SignUp() {
   } = useForm({ mode: "onChange" });
   const navigate = useNavigate();
   const onSubmit = async (data) => {
+    let createdUser = null;
+
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -19,9 +23,37 @@ function SignUp() {
         data.password,
       );
 
-      console.log("Created user:", userCredential.user);
+      createdUser = userCredential.user;
+
+      console.log("Created user:", createdUser);
+
+      const picUrl = await uploadPhoto(data.Pic?.[0]);
+      console.log("Photo URL:", picUrl);
+      console.log("Type:", typeof picUrl);
+      await setDoc(doc(db, "users", createdUser.uid), {
+        uid: createdUser.uid,
+        Name: data.name,
+        searchName: data.name.toLowerCase(),
+        email: createdUser.email,
+        number: data.number,
+        photoURL: picUrl,
+        isOnline: false,
+        verified: false,
+      });
+
+      console.log("User added to firestore", createdUser);
+
       navigate("/Chat");
     } catch (error) {
+      if (createdUser) {
+        try {
+          await deleteUser(createdUser);
+          console.log("User deleted because signup failed");
+        } catch (deleteError) {
+          console.log("Failed to delete user:", deleteError.message);
+        }
+      }
+
       console.log(error.message);
       alert(error.message);
     }
@@ -46,6 +78,44 @@ function SignUp() {
 
             {errors.email && (
               <p className={styles.errorMessage}>{errors.email.message}</p>
+            )}
+          </div>
+          <div className={styles.inputGroup}>
+            <input
+              type="text"
+              placeholder="Name"
+              {...register("name", {
+                required: "Name is required",
+              })}
+            />
+            {errors.name && (
+              <p className={styles.errorMessage}>{errors.name.message}</p>
+            )}
+          </div>
+          <div className={styles.inputGroup}>
+            <input
+              type="text"
+              placeholder="Phone Number"
+              {...register("number", {
+                required: "Number is required",
+              })}
+            />
+
+            {errors.number && (
+              <p className={styles.errorMessage}>{errors.number.message}</p>
+            )}
+          </div>
+          <div className={styles.inputGroup}>
+            <input
+              type="file"
+              accept="image/*"
+              {...register("Pic", {
+                required: "Profile picture is required",
+              })}
+            />
+
+            {errors.Pic && (
+              <p className={styles.errorMessage}>{errors.Pic.message}</p>
             )}
           </div>
           <div className={styles.inputGroup}>
