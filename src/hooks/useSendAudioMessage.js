@@ -21,7 +21,7 @@ export function useSendAudioMessage() {
       await sendMessage(chat, userId, {
         type: "audio",
         text: null,
-        audioURL,
+        fileURL: audioURL,
       });
 
       return audioURL;

@@ -1,0 +1,45 @@
+.inputWrapper {
+  position: relative;
+}
+
+.attachmentMenu {
+  position: absolute;
+  bottom: 60px;
+  left: 0;
+
+  width: 180px;
+  padding: 8px;
+
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.attachmentMenu label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 10px;
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.attachmentMenu label:hover {
+  background-color: #f1f1f1;
+}
+
+.attachmentMenu i {
+  width: 20px;
+  font-size: 18px;
+}
+
+.attachmentMenu span {
+  font-size: 15px;
+}

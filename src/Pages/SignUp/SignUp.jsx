@@ -5,8 +5,7 @@ import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { doc, setDoc } from "firebase/firestore";
-import { uploadPhoto } from "../../services/imageService";
-function SignUp() {
+import { uploadFile } from "../../services/uploadFile";function SignUp() {
   const {
     register,
     handleSubmit,
@@ -27,7 +26,7 @@ function SignUp() {
 
       console.log("Created user:", createdUser);
 
-      const picUrl = await uploadPhoto(data.Pic?.[0]);
+      const picUrl = await uploadFile(data.Pic?.[0],"image");
       console.log("Photo URL:", picUrl);
       console.log("Type:", typeof picUrl);
       await setDoc(doc(db, "users", createdUser.uid), {

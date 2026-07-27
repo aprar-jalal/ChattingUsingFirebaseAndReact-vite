@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { uploadAudio } from "../services/audioService";
-
+import { uploadFile } from "../services/uploadFile";
 export function useUploadAudio() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -11,7 +10,7 @@ export function useUploadAudio() {
     setError(null);
 
     try {
-      const url = await uploadAudio(audioBlob);
+      const url = await uploadFile(audioBlob, "video");
 
       setAudioUrl(url);
 
