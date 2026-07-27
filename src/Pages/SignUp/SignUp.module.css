@@ -64,3 +64,27 @@ form input:focus {
   font-size: 12px;
   margin: 5px 0 0 5px;
 }
+.fileInput {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+  background: white;
+}
+
+.fileInput::file-selector-button {
+  padding: 8px 14px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--Iceberg-Blue);
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.fileInput::file-selector-button:hover {
+  opacity: 0.85;
+}

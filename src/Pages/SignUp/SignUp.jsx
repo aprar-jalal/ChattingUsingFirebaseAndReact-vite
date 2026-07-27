@@ -108,6 +108,7 @@ function SignUp() {
           <div className={styles.inputGroup}>
             <input
               type="file"
+              className={styles.fileInput}
               accept="image/*"
               {...register("Pic", {
                 required: "Profile picture is required",
