@@ -1165,34 +1165,7 @@ If Firebase reports that an index is required, create the suggested index from t
 
 ---
 
-# 🔮 Future Improvements
 
-Possible future improvements include:
-
-* [ ] Image preview before sending
-* [ ] File size validation
-* [ ] File type validation
-* [ ] Upload progress indicators
-* [ ] Message deletion
-* [ ] Message editing
-* [ ] Reply to messages
-* [ ] Forward messages
-* [ ] Emoji picker
-* [ ] Typing indicator
-* [ ] Message reactions
-* [ ] Group chats
-* [ ] Voice/video calls
-* [ ] Better attachment previews
-* [ ] Drag-and-drop file uploads
-* [ ] Pagination for old messages
-* [ ] Better mobile responsiveness
-* [ ] Push notifications
-* [ ] Message timestamps
-* [ ] User blocking
-* [ ] Chat deletion
-* [ ] Dark mode
-
----
 
 # 📚 Main Technologies Summary
 
