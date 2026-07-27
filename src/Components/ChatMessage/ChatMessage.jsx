@@ -7,6 +7,7 @@ import { useSendMessage } from "../../hooks/useSendMessages";
 import { useMarkMessagesSeen } from "../../hooks/useMarkMessagesSeen";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { useSendAudioMessage } from "../../hooks/useSendAudioMessage";
+import AttachmentMenu from "../AttachmentMenu/AttachmentMenu";
 
 function ChatMessages({ selectedChat, setSelectedChat }) {
   const { user: currentUser } = useAuth();
@@ -15,13 +16,15 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
 
   const messagesEndRef = useRef(null);
 
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+
   const { sendMessage: send } = useSendMessage();
 
   const { messages, loading, error } = useMessages(
     selectedChat?.id,
     currentUser?.uid,
   );
-  
+
   // to be sure that this is audio is sent to this chat even if the user changes between chats before the audio is sent
   const recordingChatRef = useRef(null);
 
@@ -52,7 +55,7 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
     await send(selectedChat, currentUser.uid, {
       type: "text",
       text: messageText,
-      audioURL: null,
+      fileURL: null,
     });
 
     setMessageText("");
@@ -66,6 +69,7 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
       startRecording();
     }
   }
+
   useEffect(() => {
     if (!audioBlob || !recordingChatRef.current || !currentUser?.uid) {
       return;
@@ -93,9 +97,8 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
   }
 
   if (error || audioError) {
-    return <p>{error.message}</p>;
+    return <p>{(error || audioError).message}</p>;
   }
-
   return (
     <div className={styles.chat}>
       <div className={styles.messagesContainer}>
@@ -120,9 +123,37 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
               {message.type === "audio" && (
                 <audio
                   controls
-                  src={message.audioURL}
+                  src={message.fileURL}
                   className={styles.audio}
                 />
+              )}
+
+              {message.type === "image" && (
+                <img
+                  src={message.fileURL}
+                  alt="Sent image"
+                  className={styles.messageImage}
+                />
+              )}
+
+              {message.type === "video" && (
+                <video
+                  controls
+                  src={message.fileURL}
+                  className={styles.messageVideo}
+                />
+              )}
+
+              {message.type === "file" && (
+                <a
+                  href={message.fileURL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.messageFile}
+                >
+                  <i className="fa-solid fa-file"></i>
+                  <span>Open file</span>
+                </a>
               )}
 
               {/* status يظهر فقط لرسائلي */}
@@ -155,10 +186,20 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
 
       <div className={styles.inputContainer}>
         <div className={styles.inputWrapper}>
-          <button className={styles.emojiButton}>
-            <i className="fa-regular fa-face-smile"></i>
+          <button
+            type="button"
+            className={styles.emojiButton}
+            onClick={() => setShowAttachmentMenu((prev) => !prev)}
+          >
+            <i className="fa-solid fa-plus"></i>
           </button>
-
+          {showAttachmentMenu && (
+            <AttachmentMenu
+              setShowAttachmentMenu={setShowAttachmentMenu}
+              selectedChat={selectedChat}
+              currentUserId={currentUser.uid}
+            />
+          )}
           <input
             type="text"
             placeholder="Type a message..."

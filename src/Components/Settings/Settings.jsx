@@ -2,8 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import styles from "./Settings.module.css";
 import avatar from "../../assets/avatar.webp";
 import { useUser } from "../../hooks/useUser";
-import { uploadPhoto } from "../../services/imageService";
+
 import { useUpdateProfile } from "../../hooks/useUpdateProfile";
+import { uploadFile } from "../../services/uploadFile";
 
 function Settings({ userId }) {
   const { user, loading: userLoading, error: userError } = useUser(userId);
@@ -29,7 +30,7 @@ useEffect(() => {
 
     if (!file) return;
 
-    const imageUrl = await uploadPhoto(file);
+    const imageUrl = await uploadFile(file,"image");
     setPreview(imageUrl);
   }
 

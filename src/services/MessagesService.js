@@ -56,7 +56,7 @@ export async function createMessage(chat, currentUserId, messageData) {
   await addDoc(collection(db, "Chat", chatId, "messages"), {
     type: messageData.type,
     text: messageData.text || null,
-    audioURL: messageData.audioURL || null,
+    fileURL: messageData.fileURL || null,
     senderId: currentUserId,
     createdAt: serverTimestamp(),
     status: "sent",
@@ -66,13 +66,19 @@ export async function createMessage(chat, currentUserId, messageData) {
     lastMessage:
       messageData.type === "text"
         ? messageData.text
-        : "🎤 Audio message",
+        : messageData.type === "audio"
+          ? "🎤 Audio message"
+          : messageData.type === "image"
+            ? "📷 Image"
+            : messageData.type === "video"
+              ? "🎥 Video"
+              : "📎 File",
+
     updatedAt: serverTimestamp(),
   });
 
   return chatId;
 }
-
 // delivered --> seen
 export async function markMessagesAsSeen(chatId, userId) {
   // we want the messages that are delivered

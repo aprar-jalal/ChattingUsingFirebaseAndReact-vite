@@ -131,3 +131,33 @@
 .seen {
     color: #22c55e;
 }
+.messageImage {
+  max-width: 250px;
+  max-height: 300px;
+  width: auto;
+  height: auto;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+.messageVideo {
+  max-width: 300px;
+  max-height: 250px;
+  border-radius: 10px;
+  display: block;
+}
+
+.audio {
+  max-width: 280px;
+}
+
+.messageFile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 8px;
+}
