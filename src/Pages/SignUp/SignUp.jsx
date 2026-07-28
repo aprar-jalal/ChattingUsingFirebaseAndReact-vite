@@ -5,13 +5,17 @@ import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { doc, setDoc } from "firebase/firestore";
-import { uploadFile } from "../../services/uploadFile";function SignUp() {
+import { uploadFile } from "../../services/uploadFile";
+
+function SignUp() {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({ mode: "onChange" });
+  } = useForm({ mode: "all" });
+
   const navigate = useNavigate();
+
   const onSubmit = async (data) => {
     let createdUser = null;
 
@@ -24,11 +28,8 @@ import { uploadFile } from "../../services/uploadFile";function SignUp() {
 
       createdUser = userCredential.user;
 
-      console.log("Created user:", createdUser);
+      const picUrl = await uploadFile(data.Pic?.[0], "image");
 
-      const picUrl = await uploadFile(data.Pic?.[0],"image");
-      console.log("Photo URL:", picUrl);
-      console.log("Type:", typeof picUrl);
       await setDoc(doc(db, "users", createdUser.uid), {
         uid: createdUser.uid,
         Name: data.name,
@@ -40,14 +41,11 @@ import { uploadFile } from "../../services/uploadFile";function SignUp() {
         verified: false,
       });
 
-      console.log("User added to firestore", createdUser);
-
       navigate("/Chat");
     } catch (error) {
       if (createdUser) {
         try {
           await deleteUser(createdUser);
-          console.log("User deleted because signup failed");
         } catch (deleteError) {
           console.log("Failed to delete user:", deleteError.message);
         }
@@ -57,90 +55,158 @@ import { uploadFile } from "../../services/uploadFile";function SignUp() {
       alert(error.message);
     }
   };
+
   return (
-    <div className={styles.Container}>
-      <div className={styles.subContainer}>
-        <h1>Sign Up</h1>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className={styles.inputGroup}>
-            <input
-              type="email"
-              placeholder="User@gmail.com"
-              {...register("email", {
-                required: "Email is required",
-                pattern: {
-                  value: /^\S+@\S+$/i,
-                  message: "Invalid email",
-                },
-              })}
-            />
+    <div className={styles.pageHeight}>
+      <div className={styles.Container}>
+        <div className={styles.backgroundCircle}></div>
+        <div className={styles.backgroundCircleTwo}></div>
 
-            {errors.email && (
-              <p className={styles.errorMessage}>{errors.email.message}</p>
-            )}
-          </div>
-          <div className={styles.inputGroup}>
-            <input
-              type="text"
-              placeholder="Name"
-              {...register("name", {
-                required: "Name is required",
-              })}
-            />
-            {errors.name && (
-              <p className={styles.errorMessage}>{errors.name.message}</p>
-            )}
-          </div>
-          <div className={styles.inputGroup}>
-            <input
-              type="text"
-              placeholder="Phone Number"
-              {...register("number", {
-                required: "Number is required",
-              })}
-            />
+        <div className={styles.subContainer}>
+          <div className={styles.header}>
+            <div className={styles.logo}>
+              <i className="fa-solid fa-user-plus"></i>
+            </div>
 
-            {errors.number && (
-              <p className={styles.errorMessage}>{errors.number.message}</p>
-            )}
+            <h1>Create Account</h1>
+            <p>Join us and start chatting with your friends</p>
           </div>
-          <div className={styles.inputGroup}>
-            <input
-              type="file"
-              className={styles.fileInput}
-              accept="image/*"
-              {...register("Pic", {
-                required: "Profile picture is required",
-              })}
-            />
 
-            {errors.Pic && (
-              <p className={styles.errorMessage}>{errors.Pic.message}</p>
-            )}
-          </div>
-          <div className={styles.inputGroup}>
-            <input
-              type="password"
-              placeholder="Password"
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 6,
-                  message: "Too short, at least 6 characters",
-                },
-                maxLength: {
-                  value: 12,
-                  message: "Too long, at most 12 characters",
-                },
-              })}
-            />
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <div className={styles.inputGroup}>
+              <label>Email</label>
 
-            {errors.password && (
-              <p className={styles.errorMessage}>{errors.password.message}</p>
-            )}
-          </div>
-          <button type="submit">Sign Up</button>
-        </form>
+              <div className={styles.inputWrapper}>
+                <i className="fa-solid fa-envelope"></i>
+
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  {...register("email", {
+                    required: "Email is required",
+                    pattern: {
+                      value: /^\S+@\S+$/i,
+                      message: "Invalid email",
+                    },
+                  })}
+                />
+              </div>
+
+              {errors.email && (
+                <p className={styles.errorMessage}>{errors.email.message}</p>
+              )}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Name</label>
+
+              <div className={styles.inputWrapper}>
+                <i className="fa-solid fa-user"></i>
+
+                <input
+                  type="text"
+                  placeholder="Enter your name"
+                  {...register("name", {
+                    required: "Name is required",
+                  })}
+                />
+              </div>
+
+              {errors.name && (
+                <p className={styles.errorMessage}>{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Phone Number</label>
+
+              <div className={styles.inputWrapper}>
+                <i className="fa-solid fa-phone"></i>
+
+                <input
+                  type="text"
+                  placeholder="Enter your phone number"
+                  {...register("number", {
+                    required: "Number is required",
+                  })}
+                />
+              </div>
+
+              {errors.number && (
+                <p className={styles.errorMessage}>{errors.number.message}</p>
+              )}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Profile Picture</label>
+
+              <div className={styles.fileWrapper}>
+                <i className="fa-solid fa-image"></i>
+
+                <input
+                  type="file"
+                  accept="image/*"
+                  {...register("Pic", {
+                    required: "Profile picture is required",
+                  })}
+                />
+              </div>
+
+              {errors.Pic && (
+                <p className={styles.errorMessage}>{errors.Pic.message}</p>
+              )}
+            </div>
+
+            <div className={styles.inputGroup}>
+              <label>Password</label>
+
+              <div className={styles.inputWrapper}>
+                <i className="fa-solid fa-lock"></i>
+
+                <input
+                  type="password"
+                  placeholder="Create a password"
+                  {...register("password", {
+                    required: "Password is required",
+                    minLength: {
+                      value: 6,
+                      message: "Too short, at least 6 characters",
+                    },
+                    maxLength: {
+                      value: 12,
+                      message: "Too long, at most 12 characters",
+                    },
+                  })}
+                />
+              </div>
+
+              {errors.password && (
+                <p className={styles.errorMessage}>{errors.password.message}</p>
+              )}
+            </div>
+
+            <button type="submit" className={styles.signupButton}>
+              <span>Create Account</span>
+              <i className="fa-solid fa-arrow-right"></i>
+            </button>
+
+            <div className={styles.divider}>
+              <span>OR</span>
+            </div>
+
+            <div className={styles.loginText}>
+              <span>Already have an account?</span>
+
+              <button
+                type="button"
+                className={styles.loginButton}
+                onClick={() => navigate("/")}
+              >
+                Login
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
