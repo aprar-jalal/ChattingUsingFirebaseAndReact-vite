@@ -9,8 +9,8 @@ import { useSendAudioMessage } from "../../hooks/useSendAudioMessage";
 import AttachmentMenu from "../AttachmentMenu/AttachmentMenu";
 import { useUser } from "../../hooks/useUser";
 import { useBlockStatus } from "../../hooks/useBlockStatus";
-
-function ChatMessages({ selectedChat, setSelectedChat }) {
+import {highlightText} from "../../hooks/usehighlightText.jsx"
+function ChatMessages({ selectedChat, setSelectedChat,searchText }) {
   const { user: currentUser } = useAuth();
 
   const [messageText, setMessageText] = useState("");
@@ -97,6 +97,17 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
     blockedMe,
     loading: blockLoading,
   } = useBlockStatus(currentUser?.uid, otherUserId);
+
+  const filteredMessages= messages?.filter((message)=>{
+    if (!searchText.trim()) return true;
+    if(message.type !== "text") return false;
+
+    return message.text
+    ?.toLowerCase()
+    .includes(searchText.toLowerCase());
+    
+  })
+
   if (!selectedChat) {
     return null;
   }
@@ -116,7 +127,7 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
             <span className={styles.today}>Today</span>
           </div>
 
-          {messages?.map((message) => (
+          {filteredMessages?.map((message) => (
             <div
               key={message.id}
               className={
@@ -126,7 +137,7 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
               }
             >
               {message.type === "text" && (
-                <span className={styles.text}>{message.text}</span>
+                <span className={styles.text}>{highlightText(message.text, searchText)}</span>
               )}
 
               {message.type === "audio" && (

@@ -147,3 +147,14 @@
         transform: translateY(0);
     }
 }
+
+.searchInput {
+  width: 250px;
+  height: 34px;
+  border: none;
+  outline: none;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 14px;
+  background-color: #f1f3f5;
+}
