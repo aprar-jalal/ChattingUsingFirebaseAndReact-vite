@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./ChatMessage.module.css";
-
 import { useAuth } from "../../Context/AuthContext";
 import { useMessages } from "../../hooks/useMessages";
 import { useSendMessage } from "../../hooks/useSendMessages";
@@ -8,6 +7,8 @@ import { useMarkMessagesSeen } from "../../hooks/useMarkMessagesSeen";
 import { useAudioRecorder } from "../../hooks/useAudioRecorder";
 import { useSendAudioMessage } from "../../hooks/useSendAudioMessage";
 import AttachmentMenu from "../AttachmentMenu/AttachmentMenu";
+import { useUser } from "../../hooks/useUser";
+import { useBlockStatus } from "../../hooks/useBlockStatus";
 
 function ChatMessages({ selectedChat, setSelectedChat }) {
   const { user: currentUser } = useAuth();
@@ -51,7 +52,6 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
 
   async function handleSendMessage() {
     if (!messageText.trim()) return;
-
     await send(selectedChat, currentUser.uid, {
       type: "text",
       text: messageText,
@@ -88,6 +88,15 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
     handleAudioMessage();
   }, [audioBlob, currentUser?.uid]);
 
+  const otherUserId = selectedChat?.members?.find(
+    (id) => id !== currentUser?.uid,
+  );
+
+  const {
+    blockedByMe,
+    blockedMe,
+    loading: blockLoading,
+  } = useBlockStatus(currentUser?.uid, otherUserId);
   if (!selectedChat) {
     return null;
   }
@@ -183,53 +192,65 @@ function ChatMessages({ selectedChat, setSelectedChat }) {
           <div ref={messagesEndRef}></div>
         </div>
       </div>
-
-      <div className={styles.inputContainer}>
-        <div className={styles.inputWrapper}>
-          <button
-            type="button"
-            className={styles.emojiButton}
-            onClick={() => setShowAttachmentMenu((prev) => !prev)}
-          >
-            <i className="fa-solid fa-plus"></i>
-          </button>
-          {showAttachmentMenu && (
-            <AttachmentMenu
-              setShowAttachmentMenu={setShowAttachmentMenu}
-              selectedChat={selectedChat}
-              currentUserId={currentUser.uid}
-            />
-          )}
-          <input
-            type="text"
-            placeholder="Type a message..."
-            value={messageText}
-            onChange={(e) => setMessageText(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                handleSendMessage();
-              }
-            }}
-          />
-
-          <button
-            className={styles.recordButton}
-            type="button"
-            disabled={audioUploading}
-            onClick={handleRecording}
-          >
-            <i
-              className={
-                audioUploading
-                  ? "fa-solid fa-spinner fa-spin"
-                  : isRecording
-                    ? "fa-solid fa-stop"
-                    : "fa-solid fa-microphone"
-              }
-            ></i>
-          </button>
+      {blockedByMe ? (
+        <div className={styles.blockedMessage}>
+          <i className="fa-solid fa-ban"></i>
+          <span>You blocked this user. You can't send messages.</span>
         </div>
-      </div>
+      ) : blockedMe ? (
+        <div className={styles.blockedMessage}>
+          <i className="fa-solid fa-ban"></i>
+
+          <span>You are blocked by this user. You can't send messages.</span>
+        </div>
+      ) : (
+        <div className={styles.inputContainer}>
+          <div className={styles.inputWrapper}>
+            <button
+              type="button"
+              className={styles.emojiButton}
+              onClick={() => setShowAttachmentMenu((prev) => !prev)}
+            >
+              <i className="fa-solid fa-plus"></i>
+            </button>
+            {showAttachmentMenu && (
+              <AttachmentMenu
+                setShowAttachmentMenu={setShowAttachmentMenu}
+                selectedChat={selectedChat}
+                currentUserId={currentUser.uid}
+              />
+            )}
+            <input
+              type="text"
+              placeholder="Type a message..."
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSendMessage();
+                }
+              }}
+            />
+
+            <button
+              className={styles.recordButton}
+              type="button"
+              disabled={audioUploading}
+              onClick={handleRecording}
+            >
+              <i
+                className={
+                  audioUploading
+                    ? "fa-solid fa-spinner fa-spin"
+                    : isRecording
+                      ? "fa-solid fa-stop"
+                      : "fa-solid fa-microphone"
+                }
+              ></i>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
