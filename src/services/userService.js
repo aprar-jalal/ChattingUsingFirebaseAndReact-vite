@@ -5,13 +5,13 @@ import {
   query,
   where,
   getDocs,
-  orderBy,
-  startAt,
-  endAt,
   updateDoc,
+  arrayUnion,
+  arrayRemove,
+  getDoc,
 } from "firebase/firestore";
-
 import { db } from "../config/firebase-config";
+import { update } from "firebase/database";
 
 export function subscribeToUser(userId, onSuccess, onError) {
   const userRef = doc(db, "users", userId);
@@ -40,7 +40,7 @@ export async function searchUserByName(name) {
 
   const q = query(
     collection(db, "users"),
-    // >= start with the first letter 
+    // >= start with the first letter
     where("searchName", ">=", search),
     // <= start with the first letter and so on
     where("searchName", "<=", search + "\uf8ff"),
@@ -63,11 +63,9 @@ export function formatLastSeen(timestamp) {
 
   if (diff < 60) return "Last seen just now";
 
-  if (diff < 3600)
-    return `Last seen ${Math.floor(diff / 60)} min ago`;
+  if (diff < 3600) return `Last seen ${Math.floor(diff / 60)} min ago`;
 
-  if (diff < 86400)
-    return `Last seen ${Math.floor(diff / 3600)} hour ago`;
+  if (diff < 86400) return `Last seen ${Math.floor(diff / 3600)} hour ago`;
 
   return `Last seen ${Math.floor(diff / 86400)} day ago`;
 }
@@ -80,4 +78,60 @@ export async function UpdateUser(userId, data) {
     number: data.number,
     photoURL: data.photoURL,
   });
+}
+
+export async function blockUser(currentUserId, otherUserId) {
+  const currentUserRef = doc(db, "users", currentUserId);
+  const otherUserRef = doc(db, "users", otherUserId);
+
+  await updateDoc(currentUserRef, {
+    blockedUser: arrayUnion(otherUserId),
+  });
+
+  await updateDoc(otherUserRef, {
+    blockedBy: arrayUnion(currentUserId),
+  });
+}
+
+export async function unBlockUser(currentUserId, otherUserId) {
+  const currentUserRef = doc(db, "users", currentUserId);
+  const otherUserRef = doc(db, "users", otherUserId);
+
+  await updateDoc(currentUserRef, {
+    blockedUser: arrayRemove(otherUserId),
+  });
+
+  await updateDoc(otherUserRef, {
+    blockedBy: arrayRemove(currentUserId),
+  });
+}
+export function subscribeToBlockStatus(
+  currentUserId,
+  otherUserId,
+  onSuccess,
+  onError
+) {
+  const currentUserRef = doc(db, "users", currentUserId);
+  return onSnapshot(
+    currentUserRef,
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        onSuccess({
+          blockedByMe: false,
+          blockedMe: false,
+        });
+        return;
+      }
+      const data = snapshot.data();
+      onSuccess({
+        blockedByMe:
+          data.blockedUser?.includes(otherUserId) || false,
+        blockedMe:
+          data.blockedBy?.includes(otherUserId) || false,
+      });
+    },
+    (error) => {
+      onError(error);
+    }
+  );
 }
