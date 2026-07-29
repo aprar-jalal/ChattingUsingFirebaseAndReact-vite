@@ -7,8 +7,12 @@ import { useSearchUsers } from "../../hooks/useSearchUsers";
 import { useCreateChat } from "../../hooks/useCreateChat";
 import avatar from "../../assets/avatar.webp";
 import Settings from "../Settings/Settings";
+import { signOut } from "firebase/auth";
+import { auth } from "../../config/firebase-config";
+import { useNavigate } from "react-router-dom";
 
 function ChatList({ setSelectedChat }) {
+  const navigate = useNavigate();
   const { user: currentUser } = useAuth();
   const [searchText, setSearchText] = useState("");
   const { users: searchResults, search, clearSearch } = useSearchUsers();
@@ -24,6 +28,16 @@ function ChatList({ setSelectedChat }) {
 
   const { chats, loading, error } = useChats(currentUser?.uid);
 
+  const [showList, setShowList] = useState(false);
+
+  async function handleLogout(){
+     try {
+    await signOut(auth);
+    navigate("/");
+  } catch (error) {
+    console.error("Logout failed:", error);
+  }
+  }
   if (loading) {
     return <p>Loading...</p>;
   }
@@ -32,11 +46,23 @@ function ChatList({ setSelectedChat }) {
     return <p>{error.message}</p>;
   }
 
+if (!currentUser) {
+  return null;
+}
   return (
     <div>
       <div className={styles.head}>
-        <i className="fa-solid fa-bars"></i>
-
+        <div className={styles.wrapper}>
+          <i
+            onClick={() => setShowList((prev) => !prev)}
+            className="fa-solid fa-bars"
+          ></i>
+          {showList && (
+            <div className={styles.dropdown}>
+              <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
+            </div>
+          )}
+        </div>
         <div className={styles.searchBox}>
           <i className="fa-solid fa-magnifying-glass"></i>
 
@@ -46,7 +72,6 @@ function ChatList({ setSelectedChat }) {
             value={searchText}
             onChange={(e) => {
               setSearchText(e.target.value);
-
               search(e.target.value);
             }}
           />
