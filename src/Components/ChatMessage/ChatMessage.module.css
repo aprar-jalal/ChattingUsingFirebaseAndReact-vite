@@ -169,3 +169,9 @@
     padding:8px;
     border-radius: 16px;
 }
+.text mark {
+  background-color: #ffe066;
+  color: #000;
+  padding: 1px 3px;
+  border-radius: 3px;
+}

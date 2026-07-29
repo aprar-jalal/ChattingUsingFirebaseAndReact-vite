@@ -8,7 +8,13 @@ import { usePresence } from "../../hooks/usePresence";
 import { useBlockUser } from "../../hooks/useBlock";
 import { useBlockStatus } from "../../hooks/useBlockStatus";
 
-function Navbar({ selectedChat}) {
+function Navbar({
+  selectedChat,
+  searchMode,
+  setSearchMode,
+  searchText,
+  setSearchText,
+}) {
   // who is the current user
   const { user: currentUser } = useAuth();
   // the other user id
@@ -24,27 +30,25 @@ function Navbar({ selectedChat}) {
 
   const [clickedDots, setClickedDots] = useState(false);
   const { block, unblock, loading } = useBlockUser();
-  const {
-    blockedByMe,
-    blockedMe,
-  } = useBlockStatus(
+  const { blockedByMe, blockedMe } = useBlockStatus(
     currentUser?.uid,
-    otherUserId
+    otherUserId,
   );
 
   function showList() {
     setClickedDots((prev) => !prev);
   }
 
- async function handleBlock() {
-  await block(currentUser.uid, otherUserId);
-  setClickedDots(false);
-}
+  async function handleBlock() {
+    await block(currentUser.uid, otherUserId);
+    setClickedDots(false);
+  }
 
-async function handleUnBlock() {
-  await unblock(currentUser.uid, otherUserId);
-  setClickedDots(false);
-}
+  async function handleUnBlock() {
+    await unblock(currentUser.uid, otherUserId);
+    setClickedDots(false);
+  }
+
   if (!selectedChat) {
     return <div className={styles.navHidden}></div>;
   }
@@ -65,7 +69,21 @@ async function handleUnBlock() {
       </div>
 
       <div className={styles.icons}>
-        <i className="fa-solid fa-magnifying-glass"></i>
+        {searchMode && (
+          <input
+            type="text"
+            placeholder="Search messages..."
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            className={styles.searchInput}
+            autoFocus
+          />
+        )}
+
+        <i
+          className="fa-solid fa-magnifying-glass"
+          onClick={() => setSearchMode((prev) => !prev)}
+        ></i>
         <i className="fa-solid fa-phone"></i>
         <div className={styles.menuWrapper}>
           <button
@@ -79,7 +97,6 @@ async function handleUnBlock() {
           {clickedDots && (
             <div className={styles.dropdown}>
               {blockedByMe ? (
-
                 <button
                   type="button"
                   className={styles.blockButton}
@@ -87,13 +104,9 @@ async function handleUnBlock() {
                 >
                   <i className="fa-solid fa-unlock"></i>
 
-                  <span>
-                    Unblock
-                  </span>
+                  <span>Unblock</span>
                 </button>
-
               ) : (
-
                 <button
                   type="button"
                   className={styles.blockButton}
@@ -101,11 +114,8 @@ async function handleUnBlock() {
                 >
                   <i className="fa-solid fa-ban"></i>
 
-                  <span>
-                    Block
-                  </span>
+                  <span>Block</span>
                 </button>
-
               )}
             </div>
           )}
