@@ -9,8 +9,12 @@ import { useSendAudioMessage } from "../../hooks/useSendAudioMessage";
 import AttachmentMenu from "../AttachmentMenu/AttachmentMenu";
 import { useUser } from "../../hooks/useUser";
 import { useBlockStatus } from "../../hooks/useBlockStatus";
-import {highlightText} from "../../hooks/usehighlightText.jsx"
-function ChatMessages({ selectedChat, setSelectedChat,searchText }) {
+import { highlightText } from "../../hooks/usehighlightText.jsx";
+import {
+  formatMessageDate,
+  formatFullDate,
+} from "../../hooks/useFormatMessageDate.js";
+function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
   const { user: currentUser } = useAuth();
 
   const [messageText, setMessageText] = useState("");
@@ -98,16 +102,18 @@ function ChatMessages({ selectedChat, setSelectedChat,searchText }) {
     loading: blockLoading,
   } = useBlockStatus(currentUser?.uid, otherUserId);
 
-  const filteredMessages= messages?.filter((message)=>{
+  const filteredMessages = messages?.filter((message) => {
     if (!searchText.trim()) return true;
-    if(message.type !== "text") return false;
+    if (message.type !== "text") return false;
 
-    return message.text
-    ?.toLowerCase()
-    .includes(searchText.toLowerCase());
-    
-  })
+    return message.text?.toLowerCase().includes(searchText.toLowerCase());
+  });
+  
+  const getDayKey = (timestamp) => {
+    const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
 
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
   if (!selectedChat) {
     return null;
   }
@@ -123,82 +129,103 @@ function ChatMessages({ selectedChat, setSelectedChat,searchText }) {
     <div className={styles.chat}>
       <div className={styles.messagesContainer}>
         <div className={styles.messages}>
-          <div className={styles.date}>
-            <span className={styles.today}>Today</span>
-          </div>
+          {filteredMessages?.map((message, index) => {
+            const currentDay = getDayKey(message.createdAt);
 
-          {filteredMessages?.map((message) => (
-            <div
-              key={message.id}
-              className={
-                message.senderId === currentUser?.uid
-                  ? `${styles.message} ${styles.sent}`
-                  : `${styles.message} ${styles.received}`
-              }
-            >
-              {message.type === "text" && (
-                <span className={styles.text}>{highlightText(message.text, searchText)}</span>
-              )}
+            const previousDay =
+              index > 0
+                ? getDayKey(filteredMessages[index - 1].createdAt)
+                : null;
 
-              {message.type === "audio" && (
-                <audio
-                  controls
-                  src={message.fileURL}
-                  className={styles.audio}
-                />
-              )}
+            const showDate = currentDay !== previousDay;
 
-              {message.type === "image" && (
-                <img
-                  src={message.fileURL}
-                  alt="Sent image"
-                  className={styles.messageImage}
-                />
-              )}
+            return (
+             //the react fragemnt to group the messages acoording to their sending date
+              <React.Fragment key={message.id}>
+                {showDate && (
+                  <div className={styles.date}>
+                    <span className={styles.dateLabel}>
+                      {formatMessageDate(message.createdAt)}
 
-              {message.type === "video" && (
-                <video
-                  controls
-                  src={message.fileURL}
-                  className={styles.messageVideo}
-                />
-              )}
+                      <span className={styles.tooltip}>
+                        {formatFullDate(message.createdAt)}
+                      </span>
+                    </span>
+                  </div>
+                )}
 
-              {message.type === "file" && (
-                <a
-                  href={message.fileURL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.messageFile}
+                <div
+                  className={
+                    message.senderId === currentUser?.uid
+                      ? `${styles.message} ${styles.sent}`
+                      : `${styles.message} ${styles.received}`
+                  }
                 >
-                  <i className="fa-solid fa-file"></i>
-                  <span>Open file</span>
-                </a>
-              )}
-
-              {/* status يظهر فقط لرسائلي */}
-              {message.senderId === currentUser?.uid && (
-                <span className={styles.status}>
-                  {message.status === "sent" && (
-                    <i className="fa-solid fa-check"></i>
+                  {message.type === "text" && (
+                    <span className={styles.text}>
+                      {highlightText(message.text, searchText)}
+                    </span>
                   )}
 
-                  {message.status === "delivered" && (
-                    <i
-                      className={`fa-solid fa-check-double ${styles.delivered}`}
-                    ></i>
+                  {message.type === "audio" && (
+                    <audio
+                      controls
+                      src={message.fileURL}
+                      className={styles.audio}
+                    />
                   )}
 
-                  {message.status === "seen" && (
-                    <i
-                      className={`fa-solid fa-check-double ${styles.seen}`}
-                    ></i>
+                  {message.type === "image" && (
+                    <img
+                      src={message.fileURL}
+                      alt="Sent image"
+                      className={styles.messageImage}
+                    />
                   )}
-                </span>
-              )}
-            </div>
-          ))}
 
+                  {message.type === "video" && (
+                    <video
+                      controls
+                      src={message.fileURL}
+                      className={styles.messageVideo}
+                    />
+                  )}
+
+                  {message.type === "file" && (
+                    <a
+                      href={message.fileURL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.messageFile}
+                    >
+                      <i className="fa-solid fa-file"></i>
+                      <span>Open file</span>
+                    </a>
+                  )}
+
+                  {message.senderId === currentUser?.uid && (
+                    <span className={styles.status}>
+                      {message.status === "sent" && (
+                        <i className="fa-solid fa-check"></i>
+                      )}
+
+                      {message.status === "delivered" && (
+                        <i
+                          className={`fa-solid fa-check-double ${styles.delivered}`}
+                        ></i>
+                      )}
+
+                      {message.status === "seen" && (
+                        <i
+                          className={`fa-solid fa-check-double ${styles.seen}`}
+                        ></i>
+                      )}
+                    </span>
+                  )}
+                </div>
+              </React.Fragment>
+            );
+          })}
           {/* نقطة النزول للآخر */}
           <div ref={messagesEndRef}></div>
         </div>
