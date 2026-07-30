@@ -9,11 +9,11 @@ import {
   serverTimestamp,
   where,
   getDocs,
+  arrayUnion,
+  getDoc,
 } from "firebase/firestore";
 
 import { db } from "../config/firebase-config";
-import { createChat } from "./ChatServices";
-
 export function subscribeToMessages(chatId, onSuccess, onError, currentUserId) {
   //this query returns the messages between the 2 users
   const q = query(
@@ -24,10 +24,12 @@ export function subscribeToMessages(chatId, onSuccess, onError, currentUserId) {
   return onSnapshot(
     q,
     async (snapshot) => {
-      const messages = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
+      const messages = snapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }))
+        .filter((message) => !message.deletedFor?.includes(currentUserId));
       onSuccess(messages);
       // sent --> delivered
       //if the message is sent to user mark it as delevered
@@ -40,7 +42,7 @@ export function subscribeToMessages(chatId, onSuccess, onError, currentUserId) {
         .map((message) =>
           updateDoc(doc(db, "Chat", chatId, "messages", message.id), {
             status: "delivered",
-            deliveredAt:serverTimestamp(),
+            deliveredAt: serverTimestamp(),
           }),
         );
       await Promise.all(updates);
@@ -63,6 +65,8 @@ export async function createMessage(chat, currentUserId, messageData) {
     status: "sent",
     deliveredAt: null,
     seenAt: null,
+    deletedFor: [],
+    deletedForEveryone: false,
   });
 
   await updateDoc(doc(db, "Chat", chatId), {
@@ -99,7 +103,7 @@ export async function markMessagesAsSeen(chatId, userId) {
         // update the message status into seen
         {
           status: "seen",
-          seenAt:serverTimestamp(),
+          seenAt: serverTimestamp(),
         },
       ),
     );
@@ -125,4 +129,33 @@ export function subscribeToUnreadCount(chatId, userId, onSuccess, onError) {
       onError(error);
     },
   );
+}
+
+export async function deleteMessageForMe(chatId, messageId, userId) {
+  const messageRef = doc(db, "Chat", chatId, "messages", messageId);
+  await updateDoc(messageRef, {
+    deletedFor: arrayUnion(userId),
+  });
+}
+
+export async function deleteMessageForEveryone(chatId, messageId, userId) {
+  const messageRef = doc(db, "Chat", chatId, "messages", messageId);
+  const snapshot = await getDoc(messageRef);
+  if (!snapshot.exists()) {
+    throw new Error("Message not found");
+  }
+  const message = snapshot.data();
+  if (message.senderId !== userId) {
+    throw new Error("You can only delete your own messages");
+  }
+
+  if (message.status === "seen") {
+    throw new Error("You can't delete this message for everyone");
+  }
+  await updateDoc(messageRef, {
+    deletedForEveryone: true,
+    deletedBy: userId,
+    text: null,
+    fileURL: null,
+  });
 }

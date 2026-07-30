@@ -60,7 +60,65 @@
     gap: 12px;
 }
 
+.infoWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
 
+.infoWrapper > i {
+    font-size: 13px;
+    color: #98a2b3;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.infoWrapper > i:hover {
+    color: #475467;
+}
+.messageMenu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right:0;
+    width: 180px;
+    padding: 6px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+}
+.menuItem {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #344054;
+    font-size: 13px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.menuItem:hover {
+    background: #f2f4f7;
+}
+
+.menuItem i {
+    width: 18px;
+    text-align: center;
+}
+.deleteEveryone {
+    color: #e5484d;
+}
+
+.deleteEveryone:hover {
+    background: #fff1f1;
+}
 .date {
     text-align: center;
     margin: 20px 0;
