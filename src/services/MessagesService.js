@@ -40,6 +40,7 @@ export function subscribeToMessages(chatId, onSuccess, onError, currentUserId) {
         .map((message) =>
           updateDoc(doc(db, "Chat", chatId, "messages", message.id), {
             status: "delivered",
+            deliveredAt:serverTimestamp(),
           }),
         );
       await Promise.all(updates);
@@ -60,6 +61,8 @@ export async function createMessage(chat, currentUserId, messageData) {
     senderId: currentUserId,
     createdAt: serverTimestamp(),
     status: "sent",
+    deliveredAt: null,
+    seenAt: null,
   });
 
   await updateDoc(doc(db, "Chat", chatId), {
@@ -96,6 +99,7 @@ export async function markMessagesAsSeen(chatId, userId) {
         // update the message status into seen
         {
           status: "seen",
+          seenAt:serverTimestamp(),
         },
       ),
     );
