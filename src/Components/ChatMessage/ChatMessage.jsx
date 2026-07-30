@@ -15,6 +15,7 @@ import {
   formatFullDate,
 } from "../../hooks/useFormatMessageDate.js";
 import MessageDetails from "../MessageDetails/MessageDetails.jsx";
+import { useDeleteMessage } from "../../hooks/useDeleteMessage.js";
 function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
   const { user: currentUser } = useAuth();
 
@@ -30,8 +31,9 @@ function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
     selectedChat?.id,
     currentUser?.uid,
   );
-
+  const [selectedMenuMessage, setSelectedMenuMessage] = useState(null);
   const [selectedMessage, setSelectedMessage] = useState(null);
+  const { deleteForMe, deleteForEveryone } = useDeleteMessage();
 
   // to be sure that this is audio is sent to this chat even if the user changes between chats before the audio is sent
   const recordingChatRef = useRef(null);
@@ -158,12 +160,64 @@ function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
                 )}
                 <div className={styles.messageRow}>
                   {message.senderId === currentUser?.uid && (
-                    <span
-                      className={styles.infoButton}
-                      onClick={() => setSelectedMessage(message)}
-                    >
-                      <i className="fa-solid fa-circle-info"></i>
-                    </span>
+                    <div className={styles.infoWrapper}>
+                      <span
+                        className={styles.infoButton}
+                        onClick={() =>
+                          setSelectedMenuMessage(
+                            selectedMenuMessage === message.id
+                              ? null
+                              : message.id,
+                          )
+                        }
+                      >
+                        <i className="fa-solid fa-circle-info"></i>
+                      </span>
+                      {selectedMenuMessage === message.id && (
+                        <div className={styles.messageMenu}>
+                          <button
+                            className={styles.menuItem}
+                            onClick={() => {
+                              setSelectedMessage(message);
+                              setSelectedMenuMessage(null);
+                            }}
+                          >
+                            <i className="fa-solid fa-circle-info"></i>
+                            <span>Message info</span>
+                          </button>
+                          <button
+                            className={styles.menuItem}
+                            onClick={async () => {
+                              await deleteForMe(
+                                selectedChat.id,
+                                message.id,
+                                currentUser.uid,
+                              );
+                              setSelectedMenuMessage(null);
+                            }}
+                          >
+                            <i className="fa-regular fa-trash-can"></i>
+                            <span>Delete for me</span>
+                          </button>
+                          {message.status !== "seen" && (
+                            <button
+                              className={`${styles.menuItem} ${styles.deleteEveryone}`}
+                              onClick={async () => {
+                                await deleteForEveryone(
+                                  selectedChat.id,
+                                  message.id,
+                                  currentUser.uid,
+                                );
+                                setSelectedMenuMessage(null);
+                              }}
+                            >
+                              <i className="fa-solid fa-trash"></i>
+                              <span>Delete for everyone</span>
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   )}
                   <div
                     className={
@@ -172,66 +226,78 @@ function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
                         : `${styles.message} ${styles.received}`
                     }
                   >
-                    {message.type === "text" && (
-                      <span className={styles.text}>
-                        {highlightText(message.text, searchText)}
+                    {message.deletedForEveryone ? (
+                      <span className={styles.deletedMessage}>
+                        <i className="fa-solid fa-ban"></i>
+
+                        {message.deletedBy === currentUser?.uid
+                          ? "You deleted this message"
+                          : "User deleted this message"}
                       </span>
-                    )}
-
-                    {message.type === "audio" && (
-                      <audio
-                        controls
-                        src={message.fileURL}
-                        className={styles.audio}
-                      />
-                    )}
-
-                    {message.type === "image" && (
-                      <img
-                        src={message.fileURL}
-                        alt="Sent image"
-                        className={styles.messageImage}
-                      />
-                    )}
-
-                    {message.type === "video" && (
-                      <video
-                        controls
-                        src={message.fileURL}
-                        className={styles.messageVideo}
-                      />
-                    )}
-
-                    {message.type === "file" && (
-                      <a
-                        href={message.fileURL}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={styles.messageFile}
-                      >
-                        <i className="fa-solid fa-file"></i>
-                        <span>Open file</span>
-                      </a>
-                    )}
-
-                    {message.senderId === currentUser?.uid && (
-                      <span className={styles.status}>
-                        {message.status === "sent" && (
-                          <i className="fa-solid fa-check"></i>
+                    ) : (
+                      <>
+                        {message.type === "text" && (
+                          <span className={styles.text}>
+                            {highlightText(message.text, searchText)}
+                          </span>
                         )}
 
-                        {message.status === "delivered" && (
-                          <i
-                            className={`fa-solid fa-check-double ${styles.delivered}`}
-                          ></i>
+                        {message.type === "audio" && (
+                          <audio
+                            controls
+                            src={message.fileURL}
+                            className={styles.audio}
+                          />
                         )}
 
-                        {message.status === "seen" && (
-                          <i
-                            className={`fa-solid fa-check-double ${styles.seen}`}
-                          ></i>
+                        {message.type === "image" && (
+                          <img
+                            src={message.fileURL}
+                            alt="Sent image"
+                            className={styles.messageImage}
+                          />
                         )}
-                      </span>
+
+                        {message.type === "video" && (
+                          <video
+                            controls
+                            src={message.fileURL}
+                            className={styles.messageVideo}
+                          />
+                        )}
+
+                        {message.type === "file" && (
+                          <a
+                            href={message.fileURL}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.messageFile}
+                          >
+                            <i className="fa-solid fa-file"></i>
+                            <span>Open file</span>
+                          </a>
+                        )}
+
+                        {message.senderId === currentUser?.uid && (
+                          <span className={styles.status}>
+                            {message.status === "sent" && (
+                              <i className="fa-solid fa-check"></i>
+                            )}
+
+                            {message.status === "delivered" && (
+                              <i
+                                className={`fa-solid fa-check-double ${styles.delivered}`}
+                              ></i>
+                            )}
+
+                            {message.status === "seen" && (
+                              <i
+                                className={`fa-solid fa-check-double ${styles.seen}`}
+                              ></i>
+                            )}
+                          </span>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
