@@ -1,0 +1,75 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal {
+  width: 500px;
+  background: rgb(251, 245, 245);
+  border-radius: 14px;
+  padding: 25px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  color:var(--Rich-Black)
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.header button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 19px;
+}
+
+.details {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.detail > i {
+  width: 20px;
+  margin-top: 3px;
+}
+.sent{
+    color:var(--Rich-Black);
+}
+.seen{
+    color:var(--Light-Green);
+}
+.delevired{
+    color:var(--Iceberg-Blue);
+}
+
+.detail span {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.detail p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--Navy-Grey);
+}

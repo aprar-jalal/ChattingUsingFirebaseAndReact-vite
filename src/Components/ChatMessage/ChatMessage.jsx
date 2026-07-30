@@ -14,6 +14,7 @@ import {
   formatMessageDate,
   formatFullDate,
 } from "../../hooks/useFormatMessageDate.js";
+import MessageDetails from "../MessageDetails/MessageDetails.jsx";
 function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
   const { user: currentUser } = useAuth();
 
@@ -29,6 +30,8 @@ function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
     selectedChat?.id,
     currentUser?.uid,
   );
+
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
   // to be sure that this is audio is sent to this chat even if the user changes between chats before the audio is sent
   const recordingChatRef = useRef(null);
@@ -108,7 +111,7 @@ function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
 
     return message.text?.toLowerCase().includes(searchText.toLowerCase());
   });
-  
+
   const getDayKey = (timestamp) => {
     const date = timestamp?.toDate ? timestamp.toDate() : new Date(timestamp);
 
@@ -140,7 +143,7 @@ function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
             const showDate = currentDay !== previousDay;
 
             return (
-             //the react fragemnt to group the messages acoording to their sending date
+              //the react fragemnt to group the messages acoording to their sending date
               <React.Fragment key={message.id}>
                 {showDate && (
                   <div className={styles.date}>
@@ -153,81 +156,96 @@ function ChatMessages({ selectedChat, setSelectedChat, searchText }) {
                     </span>
                   </div>
                 )}
-
-                <div
-                  className={
-                    message.senderId === currentUser?.uid
-                      ? `${styles.message} ${styles.sent}`
-                      : `${styles.message} ${styles.received}`
-                  }
-                >
-                  {message.type === "text" && (
-                    <span className={styles.text}>
-                      {highlightText(message.text, searchText)}
-                    </span>
-                  )}
-
-                  {message.type === "audio" && (
-                    <audio
-                      controls
-                      src={message.fileURL}
-                      className={styles.audio}
-                    />
-                  )}
-
-                  {message.type === "image" && (
-                    <img
-                      src={message.fileURL}
-                      alt="Sent image"
-                      className={styles.messageImage}
-                    />
-                  )}
-
-                  {message.type === "video" && (
-                    <video
-                      controls
-                      src={message.fileURL}
-                      className={styles.messageVideo}
-                    />
-                  )}
-
-                  {message.type === "file" && (
-                    <a
-                      href={message.fileURL}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.messageFile}
-                    >
-                      <i className="fa-solid fa-file"></i>
-                      <span>Open file</span>
-                    </a>
-                  )}
-
+                <div className={styles.messageRow}>
                   {message.senderId === currentUser?.uid && (
-                    <span className={styles.status}>
-                      {message.status === "sent" && (
-                        <i className="fa-solid fa-check"></i>
-                      )}
-
-                      {message.status === "delivered" && (
-                        <i
-                          className={`fa-solid fa-check-double ${styles.delivered}`}
-                        ></i>
-                      )}
-
-                      {message.status === "seen" && (
-                        <i
-                          className={`fa-solid fa-check-double ${styles.seen}`}
-                        ></i>
-                      )}
+                    <span
+                      className={styles.infoButton}
+                      onClick={() => setSelectedMessage(message)}
+                    >
+                      <i className="fa-solid fa-circle-info"></i>
                     </span>
                   )}
+                  <div
+                    className={
+                      message.senderId === currentUser?.uid
+                        ? `${styles.message} ${styles.sent}`
+                        : `${styles.message} ${styles.received}`
+                    }
+                  >
+                    {message.type === "text" && (
+                      <span className={styles.text}>
+                        {highlightText(message.text, searchText)}
+                      </span>
+                    )}
+
+                    {message.type === "audio" && (
+                      <audio
+                        controls
+                        src={message.fileURL}
+                        className={styles.audio}
+                      />
+                    )}
+
+                    {message.type === "image" && (
+                      <img
+                        src={message.fileURL}
+                        alt="Sent image"
+                        className={styles.messageImage}
+                      />
+                    )}
+
+                    {message.type === "video" && (
+                      <video
+                        controls
+                        src={message.fileURL}
+                        className={styles.messageVideo}
+                      />
+                    )}
+
+                    {message.type === "file" && (
+                      <a
+                        href={message.fileURL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.messageFile}
+                      >
+                        <i className="fa-solid fa-file"></i>
+                        <span>Open file</span>
+                      </a>
+                    )}
+
+                    {message.senderId === currentUser?.uid && (
+                      <span className={styles.status}>
+                        {message.status === "sent" && (
+                          <i className="fa-solid fa-check"></i>
+                        )}
+
+                        {message.status === "delivered" && (
+                          <i
+                            className={`fa-solid fa-check-double ${styles.delivered}`}
+                          ></i>
+                        )}
+
+                        {message.status === "seen" && (
+                          <i
+                            className={`fa-solid fa-check-double ${styles.seen}`}
+                          ></i>
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </React.Fragment>
             );
           })}
           {/* نقطة النزول للآخر */}
           <div ref={messagesEndRef}></div>
+          {selectedMessage && (
+            <MessageDetails
+              message={selectedMessage}
+              onClose={() => setSelectedMessage(null)}
+            />
+          )}
         </div>
       </div>
       {blockedByMe ? (

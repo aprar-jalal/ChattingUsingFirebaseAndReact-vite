@@ -3,6 +3,7 @@
     display: flex;
     flex-direction: column;
     padding: 24px 140px;
+    position: relative;
 }
 
 .messagesContainer {
@@ -10,6 +11,7 @@
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    
 }
 
 .messagesContainer::-webkit-scrollbar {
@@ -24,7 +26,33 @@
 .messagesContainer::-webkit-scrollbar-track {
     background: transparent;
 }
+ 
+.messageRow {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
 
+.messageRow:has(.sent) {
+    justify-content: flex-end;
+}
+
+.messageRow:has(.received) {
+    justify-content: flex-start;
+}
+.infoButton i{
+    border: none;
+    outline: none;
+    cursor: pointer;
+    display: none;    
+}
+
+.messageRow:hover .infoButton i{
+    color: #667085;
+    display: block;
+    font-size: 18px;
+}
 .messages {
     margin-top: auto;
     display: flex;
