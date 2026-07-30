@@ -39,20 +39,48 @@
     font-size: 14px;
 }
 
-.today {
-    background: #3D70B899;
-    color: white;
-    padding: 4px 12px;
-    border-radius: 12px;
+.dateLabel {
+  position: relative;
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: #eef1f5;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: default;
 }
 
+.tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  padding: 7px 10px;
+  background: #222;
+  color: white;
+  border-radius: 6px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dateLabel:hover .tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
 
 .message {
     padding: 10px 15px;
     border-radius: 15px;
     max-width: 402px;
 }
-
 
 .sent {
     align-self: flex-end;
