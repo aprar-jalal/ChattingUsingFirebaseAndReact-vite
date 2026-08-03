@@ -55,7 +55,7 @@ function Chat() {
             }}
           />
         )}
-        {showCall && (
+        {(showCall || calling) && (
           <VideoCall
             localStream={localStream}
             remoteStream={remoteStream}
