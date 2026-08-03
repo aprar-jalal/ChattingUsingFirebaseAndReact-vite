@@ -14,13 +14,26 @@ function VideoCall({
       localVideoRef.current.srcObject = localStream;
     }
   },[localStream]);
-  // عرض فيديو الطرف الثاني
-  useEffect(() => {
 
-    if(remoteStream && remoteVideoRef.current){
-      remoteVideoRef.current.srcObject = remoteStream;
-    }
-  },[remoteStream]);
+useEffect(() => {
+
+  if(remoteStream && remoteVideoRef.current){
+
+    remoteVideoRef.current.srcObject = remoteStream;
+
+    remoteVideoRef.current
+      .play()
+      .catch(err => console.log("play error",err));
+
+  }
+  if(remoteStream){
+
+   console.log(
+    "REMOTE VIDEO TRACKS",
+    remoteStream.getVideoTracks()
+   );}
+
+},[remoteStream]);
 
   return (
     <div className={styles.overlay}>

@@ -7,7 +7,6 @@ import { formatLastSeen } from "../../services/userService";
 import { usePresence } from "../../hooks/usePresence";
 import { useBlockUser } from "../../hooks/useBlock";
 import { useBlockStatus } from "../../hooks/useBlockStatus";
-import VideoCall from "../VideoCall/VideoCall";
 
 function Navbar({
   selectedChat,
@@ -20,6 +19,8 @@ function Navbar({
   localStream,
   remoteStream,
   hangUp,
+  showCall,
+  setShowCall
 }) {
   // who is the current user
   const { user: currentUser } = useAuth();
@@ -40,7 +41,6 @@ function Navbar({
     currentUser?.uid,
     otherUserId,
   );
-  const [showCall, setShowCall] = useState(false);
   function showList() {
     setClickedDots((prev) => !prev);
   }
@@ -131,13 +131,7 @@ function Navbar({
               )}
             </div>
           )}
-          {showCall && (
-            <VideoCall
-              localStream={localStream}
-              remoteStream={remoteStream}
-              onClose={()=>{hangUp(); setShowCall(false);}}
-            />
-          )}
+          
         </div>
       </div>
     </div>
