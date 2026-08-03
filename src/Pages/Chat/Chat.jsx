@@ -6,14 +6,16 @@ import ChatMessages from "../../Components/ChatMessage/ChatMessage";
 import { useCall } from "../../hooks/useCall";
 import IncomingCall from "../../Components/IncomingCall/IncomingCall";
 import { useIncomingCall } from "../../hooks/useIncomingCall";
+import VideoCall from "../../Components/VideoCall/VideoCall";
 function Chat() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [searchMode, setSearchMode] = useState(false);
   const [searchText, setSearchText] = useState("");
+  const [showCall, setShowCall] = useState(false);
+  const { incomingCall, setIncomingCall } = useIncomingCall();
   const { startCall, acceptCall, hangUp, localStream, remoteStream, calling } =
     useCall();
 
-  const { incomingCall, setIncomingCall } = useIncomingCall();
   return (
     <div className={styles.Container}>
       <div>
@@ -31,6 +33,7 @@ function Chat() {
           localStream={localStream}
           remoteStream={remoteStream}
           hangUp={hangUp}
+          setShowCall={setShowCall}
         />
         <ChatMessages
           selectedChat={selectedChat}
@@ -40,13 +43,25 @@ function Chat() {
         {incomingCall && (
           <IncomingCall
             call={incomingCall}
-            onAccept={(call) => {
-              acceptCall(call);
+            call={incomingCall}
+            onAccept={async (call) => {
+              await acceptCall(call);
               setIncomingCall(null);
+              setShowCall(true);
             }}
             onDecline={async (callId) => {
               await hangUp(callId);
               setIncomingCall(null);
+            }}
+          />
+        )}
+        {showCall && (
+          <VideoCall
+            localStream={localStream}
+            remoteStream={remoteStream}
+            onClose={() => {
+              hangUp();
+              setShowCall(false);
             }}
           />
         )}
