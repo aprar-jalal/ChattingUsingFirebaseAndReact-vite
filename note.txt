@@ -1,0 +1,89 @@
+ضغط اتصال
+
+↓
+
+createPeerConnection()
+
+↓
+
+getUserMedia()
+
+↓
+
+createOffer()
+
+↓
+
+save Offer
+
+↓
+
+Browser يبدأ يولد Candidates
+
+↓
+
+onicecandidate()
+
+↓
+
+save Candidate 1
+
+↓
+
+save Candidate 2
+
+↓
+
+save Candidate 3
+
+↓
+
+الطرف الثاني
+
+↓
+
+يقرأ Offer
+
+↓
+
+setRemoteDescription()
+
+↓
+
+createAnswer()
+
+↓
+
+save Answer
+
+↓
+
+يبدأ يولد Candidates
+
+↓
+
+save Candidate
+
+↓
+
+الطرف الأول
+
+↓
+
+addIceCandidate()
+
+↓
+
+الطرف الثاني
+
+↓
+
+addIceCandidate()
+
+↓
+
+WebRTC يجرب كل الطرق
+
+↓
+
+Peer Connected
