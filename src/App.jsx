@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import SignUp from "./Pages/signUp/SignUp.jsx";
+import SignUp from "./Pages/SignUp/SignUp.jsx";
 import Chat from "./Pages/Chat/Chat.jsx";
 import {db} from "./config/firebase-config"
 import { useState } from "react";
