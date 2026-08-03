@@ -1,39 +1,25 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./VideoCall.module.css";
 
-function VideoCall({
-  onClose,
-  localStream,
-  remoteStream
-}) {
+function VideoCall({ onClose, localStream, remoteStream }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   // عرض فيديو الكاميرا الخاصة فيك
   useEffect(() => {
-    if(localStream && localVideoRef.current){
+    if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
     }
-  },[localStream]);
+  }, [localStream]);
 
-useEffect(() => {
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) {
+      remoteVideoRef.current.srcObject = remoteStream;
 
-  if(remoteStream && remoteVideoRef.current){
-
-    remoteVideoRef.current.srcObject = remoteStream;
-
-    remoteVideoRef.current
-      .play()
-      .catch(err => console.log("play error",err));
-
-  }
-  if(remoteStream){
-
-   console.log(
-    "REMOTE VIDEO TRACKS",
-    remoteStream.getVideoTracks()
-   );}
-
-},[remoteStream]);
+      remoteVideoRef.current.play().catch((err) => {
+        console.log("remote play error", err);
+      });
+    }
+  }, [remoteStream]);
 
   return (
     <div className={styles.overlay}>
@@ -45,6 +31,7 @@ useEffect(() => {
             playsInline
             className={styles.remoteVideo}
           />
+
           <video
             ref={localVideoRef}
             autoPlay
@@ -54,10 +41,7 @@ useEffect(() => {
           />
         </div>
         <div className={styles.controls}>
-          <button
-            className={styles.endButton}
-            onClick={onClose}
-          >
+          <button className={styles.endButton} onClick={onClose}>
             <i className="fa-solid fa-phone-slash"></i>
           </button>
         </div>
@@ -65,6 +49,5 @@ useEffect(() => {
     </div>
   );
 }
-
 
 export default VideoCall;

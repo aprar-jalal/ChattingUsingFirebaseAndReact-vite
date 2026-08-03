@@ -55,26 +55,60 @@ export function useCall() {
   }
 
   async function acceptCall(call) {
-    const pc = createPeerConnection(
-      async (candidate) => {
-        await addIceCandidate(call.id, "receiverCandidates", candidate);
-      },
-      (stream) => {
-        setRemoteStream(stream);
-      },
-    );
-    peerConnectionRef.current = pc;
-    const stream = await getLocalStream(true);
-    setLocalStream(stream);
-    addTracks(stream);
-    await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
-    // create answer
-    const answer = await pc.createAnswer();
-    await pc.setLocalDescription(answer);
-    await answerCall(call.id, answer);
-    setCallId(call.id);
-    setCalling(true);
-  }
+
+  const pc = createPeerConnection(
+    async (candidate) => {
+      await addIceCandidate(
+        call.id,
+        "receiverCandidates",
+        candidate
+      );
+    },
+
+    (stream) => {
+      console.log("REMOTE STREAM RECEIVED", stream);
+      setRemoteStream(stream);
+    }
+  );
+
+
+  peerConnectionRef.current = pc;
+
+
+  // 1- set caller offer first
+  await pc.setRemoteDescription(
+    new RTCSessionDescription(call.offer)
+  );
+
+
+  // 2- open camera and mic
+  const stream = await getLocalStream(true);
+
+  setLocalStream(stream);
+
+
+  // 3- send your tracks
+  stream.getTracks().forEach(track=>{
+    pc.addTrack(track, stream);
+  });
+
+
+  // 4- create answer
+  const answer = await pc.createAnswer();
+
+  await pc.setLocalDescription(answer);
+
+
+  // 5- save answer in firebase
+  await answerCall(
+    call.id,
+    answer
+  );
+
+
+  setCallId(call.id);
+  setCalling(true);
+}
 
   async function hangUp() {
     if (callId) {
