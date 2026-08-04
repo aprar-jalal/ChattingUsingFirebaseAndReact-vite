@@ -63,43 +63,32 @@ export async function addIceCandidate(callId, type, candidate) {
 }
 export function listenToCandidates(callId, type, pc) {
   const queue = [];
-
-  const unsubscribe = onSnapshot(
-    collection(db, "calls", callId, type),
-    async (snapshot) => {
-      for (const change of snapshot.docChanges()) {
-        if (change.type !== "added") continue;
-        if (pc.signalingState === "closed" || pc.connectionState === "closed") {
-          console.log("PC CLOSED IGNORE ICE");
-          return;
-        }
+  return onSnapshot(collection(db, "calls", callId, type), async (snapshot) => {
+    for (const change of snapshot.docChanges()) {
+      if (change.type === "added") {
         const candidate = new RTCIceCandidate(change.doc.data());
         console.log("RECEIVED ICE:", candidate.type);
-        try {
-          if (pc.remoteDescription) {
-            await pc.addIceCandidate(candidate);
-            console.log("ICE ADDED DIRECT");
-          } else {
-            queue.push(candidate);
-            console.log("ICE QUEUED");
-          }
-        } catch (err) {
-          console.log("ICE ADD ERROR", err.message);
+        if (pc.remoteDescription) {
+          await pc.addIceCandidate(candidate);
+          console.log("ICE ADDED DIRECT");
+        } else {
+          console.log("ICE QUEUED");
+          queue.push(candidate);
         }
       }
-      if (pc.remoteDescription && queue.length) {
-        while (queue.length) {
-          const candidate = queue.shift();
-          try {
-            await pc.addIceCandidate(candidate);
-          } catch (err) {
-            console.log("QUEUED ICE ERROR", err.message);
-          }
+    }
+    if (pc.remoteDescription && queue.length) {
+      for (const candidate of queue) {
+        if (
+          pc.connectionState !== "failed" &&
+          pc.connectionState !== "closed"
+        ) {
+          await pc.addIceCandidate(candidate);
         }
       }
-    },
-  );
-  return unsubscribe;
+      queue.length = 0;
+    }
+  });
 }
 
 // listen for answer

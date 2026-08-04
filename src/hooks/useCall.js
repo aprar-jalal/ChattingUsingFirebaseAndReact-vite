@@ -16,14 +16,11 @@ import {
   listenToCandidates,
 } from "../services/CallServices";
 
-
 export function useCall() {
-
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [callId, setCallId] = useState(null);
   const [calling, setCalling] = useState(false);
-
 
   const peerConnectionRef = useRef(null);
   const callIdRef = useRef(null);
@@ -34,325 +31,159 @@ export function useCall() {
   // ICE generated before call document exists
   const pendingCandidates = useRef([]);
 
-
-
   async function startCall(currentUserId, receiverId) {
-
-
     const pc = createPeerConnection(
-
-      async(candidate)=>{
-
-        if(callIdRef.current){
-
+      async (candidate) => {
+        if (callIdRef.current) {
           await addIceCandidate(
             callIdRef.current,
             "callerCandidates",
-            candidate
+            candidate,
           );
-
-        }else{
-
+        } else {
           pendingCandidates.current.push(candidate);
-
         }
-
       },
 
-
-      (stream)=>{
-
-        console.log(
-          "REMOTE STREAM RECEIVED",
-          stream
-        );
+      (stream) => {
+        console.log("REMOTE STREAM RECEIVED", stream);
 
         setRemoteStream(stream);
-
-      }
-
+      },
     );
 
-
     peerConnectionRef.current = pc;
-
-
 
     const stream = await getLocalStream();
 
     setLocalStream(stream);
 
-
-    addTracks(
-      pc,
-      stream
-    );
-
-
+    addTracks(pc, stream);
 
     const offer = await pc.createOffer();
 
     await pc.setLocalDescription(offer);
-pc.getSenders().forEach(sender=>{
+    pc.getSenders().forEach((sender) => {
+      console.log(
+        "SENDER",
+        sender.track.kind,
+        sender.track.readyState,
+        sender.track.enabled,
+      );
+    });
 
- console.log(
-  "SENDER",
-  sender.track.kind,
-  sender.track.readyState,
-  sender.track.enabled
- );
+    const id = await createCall(currentUserId, receiverId, {
+      type: offer.type,
+      sdp: offer.sdp,
+    });
 
-});
-
-
-    const id = await createCall(
-      currentUserId,
-      receiverId,
-      {
-        type: offer.type,
-        sdp: offer.sdp
-      }
-    );
-
-
-    console.log(
-      "CALL CREATED:",
-      id
-    );
-
-
+    console.log("CALL CREATED:", id);
 
     callIdRef.current = id;
 
-
-
     // upload pending ICE
-    for(const candidate of pendingCandidates.current){
-
-      await addIceCandidate(
-        id,
-        "callerCandidates",
-        candidate
-      );
-
+    for (const candidate of pendingCandidates.current) {
+      await addIceCandidate(id, "callerCandidates", candidate);
     }
 
-
-    pendingCandidates.current=[];
-
-
+    pendingCandidates.current = [];
 
     setCallId(id);
 
+    const unsubscribeAnswer = listenToCallAnswer(id, pc);
 
-
-    const unsubscribeAnswer =
-      listenToCallAnswer(
-        id,
-        pc
-      );
-
-
-    const unsubscribeCandidates =
-      listenToCandidates(
-        id,
-        "receiverCandidates",
-        pc
-      );
-
-
-
-    listenersRef.current.push(
-      unsubscribeAnswer,
-      unsubscribeCandidates
+    const unsubscribeCandidates = listenToCandidates(
+      id,
+      "receiverCandidates",
+      pc,
     );
 
-
+    listenersRef.current.push(unsubscribeAnswer, unsubscribeCandidates);
 
     setCalling(true);
-
   }
 
-
-
-
-
-  async function acceptCall(call){
-
-
+  async function acceptCall(call) {
     const pc = createPeerConnection(
-
-      async(candidate)=>{
-
-
-        await addIceCandidate(
-          call.id,
-          "receiverCandidates",
-          candidate
-        );
-
-
+      async (candidate) => {
+        await addIceCandidate(call.id, "receiverCandidates", candidate);
       },
 
-
-      (stream)=>{
-
-
-        console.log(
-          "REMOTE STREAM RECEIVED",
-          stream
-        );
-
+      (stream) => {
+        console.log("REMOTE STREAM RECEIVED", stream);
 
         setRemoteStream(stream);
-
-
-      }
-
+      },
     );
 
-
-
     peerConnectionRef.current = pc;
-
-
 
     /*
        Start listening ICE
        only once
     */
 
+    await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
 
-
-
-
-   await pc.setRemoteDescription(
- new RTCSessionDescription(call.offer)
-);
-
-
-
-    const unsubscribeCandidates =
-      listenToCandidates(
-        call.id,
-        "callerCandidates",
-        pc
-      );
-
-
-    listenersRef.current.push(
-      unsubscribeCandidates
+    const unsubscribeCandidates = listenToCandidates(
+      call.id,
+      "callerCandidates",
+      pc,
     );
 
+    listenersRef.current.push(unsubscribeCandidates);
 
-
-
-    const stream =
-      await getLocalStream();
-
+    const stream = await getLocalStream();
 
     setLocalStream(stream);
 
+    addTracks(pc, stream);
+    console.log("LOCAL TRACKS", stream.getTracks());
 
+    const answer = await pc.createAnswer();
 
-    addTracks(
-      pc,
-      stream
-    );
-console.log(
-  "LOCAL TRACKS",
-  stream.getTracks()
-);
-
-
-
-    const answer =
-      await pc.createAnswer();
-
-
-    await pc.setLocalDescription(
-      answer
-    );
-
-
+    await pc.setLocalDescription(answer);
 
     await answerCall(
-
       call.id,
 
       {
         type: pc.localDescription.type,
-        sdp: pc.localDescription.sdp
-      }
-
+        sdp: pc.localDescription.sdp,
+      },
     );
 
-
-    console.log(
-      "ANSWER SET SUCCESS"
-    );
-
-
+    console.log("ANSWER SET SUCCESS");
 
     setCallId(call.id);
 
     callIdRef.current = call.id;
 
-
     setCalling(true);
-
   }
 
-
-
-
-
-  async function hangUp(){
-
-
+  async function hangUp() {
     // remove firestore listeners
 
-    listenersRef.current.forEach(
-      unsubscribe=>{
-
-        if(typeof unsubscribe === "function"){
-
-          unsubscribe();
-
-        }
-
+    listenersRef.current.forEach((unsubscribe) => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
       }
-    );
+    });
 
+    listenersRef.current = [];
 
-    listenersRef.current=[];
-
-
-
-    if(callIdRef.current){
-
-      await endCall(
-        callIdRef.current
-      );
-
+    if (callIdRef.current) {
+      await endCall(callIdRef.current);
     }
-
-
 
     closeConnection();
 
-
-
-    if(localStream){
-
-      localStream.getTracks()
-      .forEach(track=>{
+    if (localStream) {
+      localStream.getTracks().forEach((track) => {
         track.stop();
       });
-
     }
-
-
 
     setLocalStream(null);
 
@@ -360,19 +191,12 @@ console.log(
 
     setCallId(null);
 
-    callIdRef.current=null;
+    callIdRef.current = null;
 
     setCalling(false);
-
-
   }
 
-
-
-
-
   return {
-
     startCall,
 
     acceptCall,
@@ -383,8 +207,6 @@ console.log(
 
     remoteStream,
 
-    calling
-
+    calling,
   };
-
 }
