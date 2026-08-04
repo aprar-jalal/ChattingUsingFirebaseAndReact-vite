@@ -6,60 +6,36 @@ export function createPeerConnection(onIceCandidate, onRemoteStream) {
   peerConnection = new RTCPeerConnection({
     iceServers: [
       {
-        urls: ["stun:stun.relay.metered.ca:80"],
+        urls:"stun:stun.l.google.com:19302"
       },
 
       {
         urls: [
-          "turn:standard.relay.metered.ca:80",
-          "turn:standard.relay.metered.ca:80?transport=tcp",
-          "turn:standard.relay.metered.ca:443",
-          "turns:standard.relay.metered.ca:443?transport=tcp",
+          "turn:free.expressturn.com:3478?transport=udp",
+          "turn:free.expressturn.com:3478?transport=tcp",
         ],
-
         username: "000000002101206120",
         credential: "bwOSLe/rWBzzjJNZbculr/vdwcY=",
       },
-      
     ],
-     iceTransportPolicy:"relay"
-
+    iceTransportPolicy: "relay",
   });
 
-  peerConnection.ontrack=(event)=>{
+  peerConnection.ontrack = (event) => {
+    console.log("REMOTE TRACK:", event.track.kind);
 
- console.log(
-  "REMOTE TRACK:",
-  event.track.kind
- );
+    event.track.onunmute = () => {
+      console.log("TRACK UNMUTED:", event.track.kind);
+    };
 
+    event.track.onmute = () => {
+      console.log("TRACK MUTED:", event.track.kind);
+    };
 
- event.track.onunmute=()=>{
+    remoteStream.addTrack(event.track);
 
-   console.log(
-    "TRACK UNMUTED:",
-    event.track.kind
-   );
-
- };
-
-
- event.track.onmute=()=>{
-
-   console.log(
-    "TRACK MUTED:",
-    event.track.kind
-   );
-
- };
-
-
- remoteStream.addTrack(event.track);
-
-
- onRemoteStream(remoteStream);
-
-};
+    onRemoteStream(remoteStream);
+  };
 
   peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
