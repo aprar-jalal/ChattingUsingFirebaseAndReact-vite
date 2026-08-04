@@ -10,16 +10,24 @@ function VideoCall({ onClose, localStream, remoteStream }) {
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
+useEffect(()=>{
 
-  useEffect(() => {
-    if (remoteStream && remoteVideoRef.current) {
-      remoteVideoRef.current.srcObject = remoteStream;
 
-      remoteVideoRef.current.play().catch((err) => {
-        console.log("remote play error", err);
-      });
-    }
-  }, [remoteStream]);
+if(remoteStream && remoteVideoRef.current){
+
+
+remoteVideoRef.current.srcObject =
+remoteStream;
+
+
+remoteVideoRef.current.play()
+.catch(e=>console.log(e));
+
+
+}
+
+
+},[remoteStream]);
 
   return (
     <div className={styles.overlay}>

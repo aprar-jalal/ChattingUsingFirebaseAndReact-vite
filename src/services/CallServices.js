@@ -54,32 +54,49 @@ export async function endCall(callId) {
     endedAt: serverTimestamp(),
   });
 }
-
-export function listenToCandidates(callId, type, pc) {
-  return onSnapshot(
-    collection(db, "calls", callId, type),
-
-    (snapshot) => {
-      snapshot.docChanges().forEach(async (change) => {
-        if (change.type === "added") {
-          await pc.addIceCandidate(new RTCIceCandidate(change.doc.data()));
-        }
-      });
-    },
-  );
-}
 export async function addIceCandidate(callId, type, candidate) {
+  console.log("UPLOAD ICE:", type, candidate.type);
   await addDoc(collection(db, "calls", callId, type), candidate.toJSON());
 }
-
-
+export function listenToCandidates(callId, type, pc) {
+  const queue = [];
+  return onSnapshot(collection(db, "calls", callId, type), async (snapshot) => {
+    for (const change of snapshot.docChanges()) {
+      if (change.type === "added") {
+        const candidate = new RTCIceCandidate(change.doc.data());
+        console.log("RECEIVED ICE:", candidate.type);
+        if (pc.remoteDescription) {
+          await pc.addIceCandidate(candidate);
+          console.log("ICE ADDED DIRECT");
+        } else {
+          console.log("ICE QUEUED");
+          queue.push(candidate);
+        }
+      }
+    }
+    if (pc.remoteDescription && queue.length) {
+      for (const candidate of queue) {
+        if (
+          pc.connectionState !== "failed" &&
+          pc.connectionState !== "closed"
+        ) {
+          await pc.addIceCandidate(candidate);
+        }
+      }
+      queue.length = 0;
+    }
+  });
+}
 
 // listen for answer
 export function listenToCallAnswer(callId, pc) {
   return onSnapshot(doc(db, "calls", callId), async (snapshot) => {
     const data = snapshot.data();
-    if (data?.answer && !pc.currentRemoteDescription) {
+    console.log("CALL DATA:", data);
+    if (data?.answer && pc.signalingState !== "stable") {
+      console.log("SETTING ANSWER");
       await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+      console.log("ANSWER SET SUCCESS");
     }
   });
 }
