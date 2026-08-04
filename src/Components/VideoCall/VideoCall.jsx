@@ -4,28 +4,60 @@ import styles from "./VideoCall.module.css";
 function VideoCall({ onClose, localStream, remoteStream }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  // عرض فيديو الكاميرا الخاصة فيك
+
   useEffect(() => {
     if (localStream && localVideoRef.current) {
+      console.log("SETTING LOCAL VIDEO");
+
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
-useEffect(()=>{
+
+  useEffect(() => {
+    if (remoteStream && remoteVideoRef.current) {
+      console.log("REMOTE VIDEO SET", remoteStream.getTracks());
+
+      remoteVideoRef.current.srcObject = remoteStream;
+
+      remoteVideoRef.current
+        .play()
+        .then(() => {
+          console.log("REMOTE PLAY SUCCESS");
+        })
+        .catch((err) => {
+          console.log("REMOTE PLAY ERROR", err);
+        });
+    }
+  }, [remoteStream]);
+  useEffect(()=>{
+
+ if(remoteStream){
+
+   const videoTrack =
+    remoteStream.getVideoTracks()[0];
 
 
-if(remoteStream && remoteVideoRef.current){
+   if(videoTrack){
+
+     console.log(
+       "VIDEO TRACK STATE",
+       videoTrack.readyState,
+       videoTrack.enabled,
+       videoTrack.muted
+     );
 
 
-remoteVideoRef.current.srcObject =
-remoteStream;
+     videoTrack.onunmute=()=>{
 
+       console.log(
+        "VIDEO TRACK UNMUTED"
+       );
 
-remoteVideoRef.current.play()
-.catch(e=>console.log(e));
+     };
 
+   }
 
-}
-
+ }
 
 },[remoteStream]);
 
@@ -37,17 +69,19 @@ remoteVideoRef.current.play()
             ref={remoteVideoRef}
             autoPlay
             playsInline
+muted
             className={styles.remoteVideo}
           />
 
           <video
             ref={localVideoRef}
             autoPlay
-            playsInline
             muted
+            playsInline
             className={styles.localVideo}
           />
         </div>
+
         <div className={styles.controls}>
           <button className={styles.endButton} onClick={onClose}>
             <i className="fa-solid fa-phone-slash"></i>

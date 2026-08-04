@@ -1,70 +1,104 @@
 let peerConnection = null;
 
 export function createPeerConnection(onIceCandidate, onRemoteStream) {
+  const remoteStream = new MediaStream();
+
   peerConnection = new RTCPeerConnection({
-    sdpSemantics:"unified-plan",
-    iceCandidatePoolSize: 10,
-    iceTransportPolicy:"relay",
     iceServers: [
-     {
- urls:[
-  "turn:free.expressturn.com:3478"
- ],
-username:"000000002101206120",
-credential:"bwOSLe/rWBzzjJNZbculr/vdwcY="
-},
+      {
+        urls: ["stun:stun.relay.metered.ca:80"],
+      },
 
+      {
+        urls: [
+          "turn:standard.relay.metered.ca:80",
+          "turn:standard.relay.metered.ca:80?transport=tcp",
+          "turn:standard.relay.metered.ca:443",
+          "turns:standard.relay.metered.ca:443?transport=tcp",
+        ],
+
+        username: "000000002101206120",
+        credential: "bwOSLe/rWBzzjJNZbculr/vdwcY=",
+      },
+      
     ],
+     iceTransportPolicy:"relay"
+
   });
-  peerConnection.oniceconnectionstatechange = async () => {
 
-console.log(
- "ICE STATE:",
- peerConnection.iceConnectionState
-);
+  peerConnection.ontrack=(event)=>{
 
-
-if(
- peerConnection.iceConnectionState === "failed"
-){
-
-const stats =
-await peerConnection.getStats();
+ console.log(
+  "REMOTE TRACK:",
+  event.track.kind
+ );
 
 
-stats.forEach(report=>{
+ event.track.onunmute=()=>{
 
-if(
-report.type==="candidate-pair"
-){
+   console.log(
+    "TRACK UNMUTED:",
+    event.track.kind
+   );
 
-console.log(
-"CANDIDATE PAIR",
-report
-);
-
-}
-
-});
+ };
 
 
-}
+ event.track.onmute=()=>{
+
+   console.log(
+    "TRACK MUTED:",
+    event.track.kind
+   );
+
+ };
+
+
+ remoteStream.addTrack(event.track);
+
+
+ onRemoteStream(remoteStream);
 
 };
+
+  peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      console.log("LOCAL ICE", event.candidate.type);
+
+      onIceCandidate(event.candidate);
+    }
+  };
+
+  peerConnection.onconnectionstatechange = () => {
+    console.log("CONNECTION:", peerConnection.connectionState);
+  };
+
+  peerConnection.oniceconnectionstatechange = () => {
+    console.log("ICE:", peerConnection.iceConnectionState);
+  };
+
   return peerConnection;
 }
+
 export async function getLocalStream() {
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: true,
+  return await navigator.mediaDevices.getUserMedia({
+    video: {
+      width: 1280,
+      height: 720,
+    },
+
     audio: true,
   });
-  return stream;
 }
+
 export function addTracks(pc, stream) {
   stream.getTracks().forEach((track) => {
+    console.log("ADDING TRACK", track.kind);
+
     pc.addTrack(track, stream);
   });
 }
+
 export function closeConnection() {
   if (peerConnection) {
     peerConnection.getSenders().forEach((sender) => {
@@ -72,7 +106,9 @@ export function closeConnection() {
         sender.track.stop();
       }
     });
+
     peerConnection.close();
+
     peerConnection = null;
   }
 }
