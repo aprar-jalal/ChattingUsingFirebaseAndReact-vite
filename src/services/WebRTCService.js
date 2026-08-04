@@ -6,9 +6,8 @@ export function createPeerConnection(onIceCandidate, onRemoteStream) {
   peerConnection = new RTCPeerConnection({
     iceServers: [
       {
-        urls:"stun:stun.l.google.com:19302"
+        urls: "stun:stun.l.google.com:19302",
       },
-
       {
         urls: [
           "turn:free.expressturn.com:3478?transport=udp",
@@ -36,7 +35,21 @@ export function createPeerConnection(onIceCandidate, onRemoteStream) {
 
     onRemoteStream(remoteStream);
   };
+  peerConnection.oniceconnectionstatechange = async () => {
+    console.log("ICE:", peerConnection.iceConnectionState);
 
+    const stats = await peerConnection.getStats();
+
+    stats.forEach((report) => {
+      if (report.type === "candidate-pair" && report.state === "succeeded") {
+        console.log("CONNECTED PAIR", report);
+      }
+
+      if (report.type === "inbound-rtp") {
+        console.log("INBOUND", report.kind, report.bytesReceived);
+      }
+    });
+  };
   peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
       console.log("LOCAL ICE", event.candidate.type);
