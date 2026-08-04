@@ -1,49 +1,77 @@
 let peerConnection = null;
 
 export function createPeerConnection(onIceCandidate, onRemoteStream) {
-  //creates the connection when the user clicks the call button
   peerConnection = new RTCPeerConnection({
-    // shows the webRTC how to connect to the other user STUN
+    sdpSemantics:"unified-plan",
+    iceCandidatePoolSize: 10,
+    iceTransportPolicy:"relay",
     iceServers: [
-      {
-        urls: "stun:stun.l.google.com:19302",
-      },
+     {
+ urls:[
+  "turn:free.expressturn.com:3478"
+ ],
+username:"000000002101206120",
+credential:"bwOSLe/rWBzzjJNZbculr/vdwcY="
+},
+
     ],
   });
-  peerConnection.onicecandidate = (event) => {
-    // نرسلها للطرف الثاني عن طريق Firebase
-    if (event.candidate) {
-      onIceCandidate(event.candidate);
-    }
-  };
-  peerConnection.ontrack = (event) => {
-    const stream = event.streams[0];
-    onRemoteStream(stream);
-  };
+  peerConnection.oniceconnectionstatechange = async () => {
 
+console.log(
+ "ICE STATE:",
+ peerConnection.iceConnectionState
+);
+
+
+if(
+ peerConnection.iceConnectionState === "failed"
+){
+
+const stats =
+await peerConnection.getStats();
+
+
+stats.forEach(report=>{
+
+if(
+report.type==="candidate-pair"
+){
+
+console.log(
+"CANDIDATE PAIR",
+report
+);
+
+}
+
+});
+
+
+}
+
+};
   return peerConnection;
 }
-
-export async function getLocalStream(video = true) {
-  //Gets the premition to the mic and cam
+export async function getLocalStream() {
   const stream = await navigator.mediaDevices.getUserMedia({
-    video,
+    video: true,
     audio: true,
   });
-  //data about the cam and mic
   return stream;
 }
-
-export function addTracks(stream) {
-  // sends ur data to the other user
-  //steam has 2 tracks vedioTrack and AudioTrack it sends them one by one in the loop to the other user
+export function addTracks(pc, stream) {
   stream.getTracks().forEach((track) => {
-    peerConnection.addTrack(track, stream);
+    pc.addTrack(track, stream);
   });
 }
-
 export function closeConnection() {
   if (peerConnection) {
+    peerConnection.getSenders().forEach((sender) => {
+      if (sender.track) {
+        sender.track.stop();
+      }
+    });
     peerConnection.close();
     peerConnection = null;
   }

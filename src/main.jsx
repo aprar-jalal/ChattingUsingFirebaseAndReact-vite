@@ -7,12 +7,10 @@ import {AuthProvider} from "./Context/AuthContext.jsx"
 import "@fortawesome/fontawesome-free/css/all.min.css";
 import { ToastContainer } from "react-toastify";
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <App />
          <ToastContainer />
       </AuthProvider>
     </BrowserRouter>
-  </StrictMode>
 );

@@ -12,7 +12,8 @@ import {
   answerCall,
   endCall,
   addIceCandidate,
-  listenToCallAnswer
+  listenToCallAnswer,
+  listenToCandidates,
 } from "../services/CallServices";
 export function useCall() {
   const [localStream, setLocalStream] = useState(null);
@@ -21,93 +22,155 @@ export function useCall() {
   const [calling, setCalling] = useState(false);
   const peerConnectionRef = useRef(null);
   const callIdRef = useRef(null);
-  const pendingCandidates = useRef([]);
-
+const pendingCandidates = useRef([]);
   async function startCall(currentUserId, receiverId) {
     // 1- create WebRTC connection
-    const pc = createPeerConnection(
-      (candidate) => {
-        pendingCandidates.current.push(candidate);
-      },
-      (stream) => {
-        setRemoteStream(stream);
-      },
+  const pc = createPeerConnection(
+  async(candidate)=>{
+
+  if(callIdRef.current){
+
+    await addIceCandidate(
+      callIdRef.current,
+      "callerCandidates",
+      candidate
     );
+
+  }else{
+
+    pendingCandidates.current.push(candidate);
+
+  }
+
+}
+);
     peerConnectionRef.current = pc;
     // 2- open camera and microphone
     const stream = await getLocalStream(true);
     setLocalStream(stream);
     // 3- add camera and mic to WebRTC
-    addTracks(stream);
+    addTracks(pc, stream);
     // 4- create offer
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
     // 5- save call in Firebase
-    const id = await createCall(currentUserId, receiverId, offer);
-    listenToCallAnswer(id, pc);
+   const id = await createCall(
+ currentUserId,
+ receiverId,
+ offer
+);
+ console.log(
+"CALL CREATED:",
+id
+);
+callIdRef.current = id;
+for(const candidate of pendingCandidates.current){
+
+ await addIceCandidate(
+   id,
+   "callerCandidates",
+   candidate
+ );
+
+}
+
+pendingCandidates.current = [];
     setCallId(id);
-    callIdRef.current = id;
-    for (const candidate of pendingCandidates.current) {
-      await addIceCandidate(id, "callerCandidates", candidate);
-    }
-    pendingCandidates.current = [];
+
+    listenToCallAnswer(id, pc);
+    listenToCandidates(
+  id,
+  "receiverCandidates",
+  pc
+);
     setCalling(true);
   }
 
-  async function acceptCall(call) {
 
-  const pc = createPeerConnection(
-    async (candidate) => {
-      await addIceCandidate(
-        call.id,
-        "receiverCandidates",
-        candidate
-      );
-    },
+async function acceptCall(call){
 
-    (stream) => {
-      console.log("REMOTE STREAM RECEIVED", stream);
-      setRemoteStream(stream);
-    }
-  );
+const pc = createPeerConnection(
 
+async(candidate)=>{
 
-  peerConnectionRef.current = pc;
+ await addIceCandidate(
+   call.id,
+   "receiverCandidates",
+   candidate
+ );
 
+},
 
-  // 1- set caller offer first
-  await pc.setRemoteDescription(
-    new RTCSessionDescription(call.offer)
-  );
+(stream)=>{
 
+console.log(
+"REMOTE STREAM RECEIVED",
+stream
+);
 
-  // 2- open camera and mic
-  const stream = await getLocalStream(true);
+setRemoteStream(stream);
 
-  setLocalStream(stream);
+}
+
+);
 
 
-  // 3- send your tracks
-  stream.getTracks().forEach(track=>{
-    pc.addTrack(track, stream);
-  });
+peerConnectionRef.current = pc;
 
 
-  // 4- create answer
-  const answer = await pc.createAnswer();
+// 1) ابدأ الاستماع أولاً
+listenToCandidates(
+ call.id,
+ "callerCandidates",
+ pc
+);
+console.log(
+"REMOTE DESCRIPTION SET"
+);
 
-  await pc.setLocalDescription(answer);
+// 2) ضع offer كـ remote
+await pc.setRemoteDescription(
+ new RTCSessionDescription(call.offer)
+);
 
 
-  // 5- save answer in firebase
-  await answerCall(
-    call.id,
-    answer
-  );
+const stream = await getLocalStream();
+
+setLocalStream(stream);
 
 
-  setCallId(call.id);
-  setCalling(true);
+addTracks(
+ pc,
+ stream
+);
+
+
+listenToCandidates(
+ call.id,
+ "callerCandidates",
+ pc
+);
+
+
+// 4) اصنع answer
+const answer = await pc.createAnswer();
+
+await pc.setLocalDescription(answer);
+
+
+// 5) ارفع answer إلى Firebase
+await answerCall(
+ call.id,
+  {
+   type: pc.localDescription.type,
+   sdp: pc.localDescription.sdp
+ }
+);
+
+
+setCallId(call.id);
+setCalling(true);
+
 }
 
   async function hangUp() {
