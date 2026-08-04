@@ -42,7 +42,10 @@ export function listenToIncomingCalls(userId, onSuccess) {
 export async function answerCall(callId, answer) {
   const callRef = doc(db, "calls", callId);
   await updateDoc(callRef, {
-    answer,
+    answer: {
+      type: answer.type,
+      sdp: answer.sdp,
+    },
     status: "connected",
   });
 }
@@ -60,43 +63,60 @@ export async function addIceCandidate(callId, type, candidate) {
 }
 export function listenToCandidates(callId, type, pc) {
   const queue = [];
-  return onSnapshot(collection(db, "calls", callId, type), async (snapshot) => {
-    for (const change of snapshot.docChanges()) {
-      if (change.type === "added") {
+
+  const unsubscribe = onSnapshot(
+    collection(db, "calls", callId, type),
+    async (snapshot) => {
+      for (const change of snapshot.docChanges()) {
+        if (change.type !== "added") continue;
+        if (pc.signalingState === "closed" || pc.connectionState === "closed") {
+          console.log("PC CLOSED IGNORE ICE");
+          return;
+        }
         const candidate = new RTCIceCandidate(change.doc.data());
         console.log("RECEIVED ICE:", candidate.type);
-        if (pc.remoteDescription) {
-          await pc.addIceCandidate(candidate);
-          console.log("ICE ADDED DIRECT");
-        } else {
-          console.log("ICE QUEUED");
-          queue.push(candidate);
+        try {
+          if (pc.remoteDescription) {
+            await pc.addIceCandidate(candidate);
+            console.log("ICE ADDED DIRECT");
+          } else {
+            queue.push(candidate);
+            console.log("ICE QUEUED");
+          }
+        } catch (err) {
+          console.log("ICE ADD ERROR", err.message);
         }
       }
-    }
-    if (pc.remoteDescription && queue.length) {
-      for (const candidate of queue) {
-        if (
-          pc.connectionState !== "failed" &&
-          pc.connectionState !== "closed"
-        ) {
-          await pc.addIceCandidate(candidate);
+      if (pc.remoteDescription && queue.length) {
+        while (queue.length) {
+          const candidate = queue.shift();
+          try {
+            await pc.addIceCandidate(candidate);
+          } catch (err) {
+            console.log("QUEUED ICE ERROR", err.message);
+          }
         }
       }
-      queue.length = 0;
-    }
-  });
+    },
+  );
+  return unsubscribe;
 }
 
 // listen for answer
 export function listenToCallAnswer(callId, pc) {
-  return onSnapshot(doc(db, "calls", callId), async (snapshot) => {
+  const unsubscribe = onSnapshot(doc(db, "calls", callId), async (snapshot) => {
     const data = snapshot.data();
-    console.log("CALL DATA:", data);
-    if (data?.answer && pc.signalingState !== "stable") {
-      console.log("SETTING ANSWER");
-      await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-      console.log("ANSWER SET SUCCESS");
+    if (!data?.answer) return;
+    if (pc.signalingState === "closed") {
+      console.log("PC CLOSED, IGNORE ANSWER");
+      return;
     }
+    if (pc.currentRemoteDescription) {
+      console.log("REMOTE DESCRIPTION ALREADY SET");
+      return;
+    }
+    await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+    console.log("REMOTE DESCRIPTION SET");
   });
+  return unsubscribe;
 }

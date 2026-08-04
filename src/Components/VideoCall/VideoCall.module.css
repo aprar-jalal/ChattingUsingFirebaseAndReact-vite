@@ -24,28 +24,28 @@ flex-direction:column;
 
 
 .videoContainer{
-flex:1;
-position:relative;
-display:flex;
-justify-content:center;
-align-items:center;
+    width:100%;
+    height:100%;
+    position:relative;
+    background:black;
 }
+
+
 .remoteVideo{
-width:100%;
-height:100%;
-object-fit:cover;
-background:black;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    background:red;
 }
+
+
 .localVideo{
-position:absolute;
-width:220px;
-height:150px;
-bottom:20px;
-right:20px;
-border-radius:15px;
-object-fit:cover;
-border:3px solid white;
-background:#333;
+    position:absolute;
+    width:200px;
+    height:150px;
+    right:20px;
+    bottom:20px;
+    object-fit:cover;
 }
 .controls{
 height:80px;
