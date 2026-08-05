@@ -7,59 +7,17 @@ function VideoCall({ onClose, localStream, remoteStream }) {
 
   useEffect(() => {
     if (localStream && localVideoRef.current) {
-      console.log("SETTING LOCAL VIDEO");
-
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
 
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
-      console.log("REMOTE VIDEO SET", remoteStream.getTracks());
-
       remoteVideoRef.current.srcObject = remoteStream;
-
-      remoteVideoRef.current
-        .play()
-        .then(() => {
-          console.log("REMOTE PLAY SUCCESS");
-        })
-        .catch((err) => {
-          console.log("REMOTE PLAY ERROR", err);
-        });
+      remoteVideoRef.current.play()
     }
   }, [remoteStream]);
-  useEffect(()=>{
-
- if(remoteStream){
-
-   const videoTrack =
-    remoteStream.getVideoTracks()[0];
-
-
-   if(videoTrack){
-
-     console.log(
-       "VIDEO TRACK STATE",
-       videoTrack.readyState,
-       videoTrack.enabled,
-       videoTrack.muted
-     );
-
-
-     videoTrack.onunmute=()=>{
-
-       console.log(
-        "VIDEO TRACK UNMUTED"
-       );
-
-     };
-
-   }
-
- }
-
-},[remoteStream]);
+ 
 
   return (
     <div className={styles.overlay}>
@@ -69,14 +27,12 @@ function VideoCall({ onClose, localStream, remoteStream }) {
             ref={remoteVideoRef}
             autoPlay
             playsInline
-muted
             className={styles.remoteVideo}
           />
 
           <video
             ref={localVideoRef}
             autoPlay
-            muted
             playsInline
             className={styles.localVideo}
           />
