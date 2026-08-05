@@ -25,6 +25,7 @@ function Chat() {
     callMessage,
   } = useCall();
   const { user } = useAuth();
+ 
   return (
     <div className={styles.Container}>
       <div>
@@ -38,10 +39,6 @@ function Chat() {
           searchText={searchText}
           setSearchText={setSearchText}
           startCall={startCall}
-          calling={calling}
-          localStream={localStream}
-          remoteStream={remoteStream}
-          hangUp={hangUp}
           setShowCall={setShowCall}
         />
         <ChatMessages
@@ -53,12 +50,12 @@ function Chat() {
           <IncomingCall
             call={incomingCall}
             onAccept={async (call) => {
-              await acceptCall(call, user.id);
+              await acceptCall(call, user.uid);
               setIncomingCall(null);
               setShowCall(true);
             }}
             onDecline={async (callId) => {
-              await declineCall(callId, user.id);
+              await declineCall(callId, user.uid);
               setIncomingCall(null);
             }}
           />
@@ -68,7 +65,7 @@ function Chat() {
             localStream={localStream}
             remoteStream={remoteStream}
             onClose={() => {
-              hangUp(user.id);
+              hangUp(user.uid);
               setShowCall(false);
             }}
           />

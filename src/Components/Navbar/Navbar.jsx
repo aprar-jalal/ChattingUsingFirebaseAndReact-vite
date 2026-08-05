@@ -15,11 +15,6 @@ function Navbar({
   searchText,
   setSearchText,
   startCall,
-  calling,
-  localStream,
-  remoteStream,
-  hangUp,
-  showCall,
   setShowCall
 }) {
   // who is the current user
