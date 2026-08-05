@@ -123,3 +123,13 @@ export function listenToCallAnswer(callId, pc) {
   });
   return unsubscribe;
 }
+
+export function listenToCallStatus(callId, onRejected) {
+  return onSnapshot(doc(db, "calls", callId), (snapshot)=>{
+    const data = snapshot.data();
+    if(!data) return;
+    if(data.status === "ended"){
+      onRejected();
+    }
+  });
+}

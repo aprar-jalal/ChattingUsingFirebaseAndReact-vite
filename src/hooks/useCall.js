@@ -13,6 +13,7 @@ import {
   addIceCandidate,
   listenToCallAnswer,
   listenToCandidates,
+  listenToCallStatus,
 } from "../services/CallServices";
 
 export function useCall() {
@@ -23,6 +24,8 @@ export function useCall() {
   //knows if there is a call or not
   const [calling, setCalling] = useState(false);
 
+  const [callMessage,setCallMessage]=useState(null);
+
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
   const callIdRef = useRef(null);
@@ -31,6 +34,7 @@ export function useCall() {
   // to store candidates untile the call is created in firebase
   const pendingCandidates = useRef([]);
 
+  
   /**************************Start Call***************************************/
   async function startCall(currentUserId, receiverId) {
     //returns RTCPeerConnection
@@ -87,7 +91,11 @@ export function useCall() {
       "receiverCandidates",
       pc,
     );
-    listenersRef.current.push(unsubscribeAnswer, unsubscribeCandidates);
+    const unsubscribeStatus = listenToCallStatus(id, () => {
+      hangUp();
+      setCallMessage(`User rejected the call`);
+    });
+    listenersRef.current.push(unsubscribeAnswer, unsubscribeCandidates,unsubscribeStatus);
     setCalling(true);
   }
 
@@ -112,6 +120,7 @@ export function useCall() {
       "callerCandidates",
       pc,
     );
+    
     listenersRef.current.push(unsubscribeCandidates);
 
     const stream = await getLocalStream();
