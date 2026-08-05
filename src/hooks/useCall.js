@@ -95,7 +95,6 @@ export function useCall() {
       currentUserId,
       (endedBy) => {
         cleanupCall();
-
         setCallMessage("The user rejected the call");
       },
     );
@@ -182,7 +181,6 @@ export function useCall() {
 
   async function declineCall(callId, currentUserId) {
     await endCall(callId, currentUserId);
-    cleanupCall();
     setCallMessage("User rejected the call");
   }
   return {
