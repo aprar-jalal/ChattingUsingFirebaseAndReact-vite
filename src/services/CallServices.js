@@ -54,6 +54,10 @@ export async function answerCall(callId, answer) {
 }
 
 export async function endCall(callId,userId) {
+  console.log("Ending call:", {
+  callId,
+  userId
+});
   const callRef = doc(db, "calls", callId);
   await updateDoc(callRef, {
     status: "ended",
