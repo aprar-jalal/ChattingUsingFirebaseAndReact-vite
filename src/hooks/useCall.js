@@ -26,7 +26,6 @@ export function useCall() {
 
   const [callMessage, setCallMessage] = useState(null);
   const currentUserRef = useRef(null);
-
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
   const callIdRef = useRef(null);
@@ -96,7 +95,6 @@ export function useCall() {
       currentUserId,
       (endedBy) => {
         cleanupCall();
-
         setCallMessage("The user rejected the call");
       },
     );
@@ -183,7 +181,6 @@ export function useCall() {
 
   async function declineCall(callId, currentUserId) {
     await endCall(callId, currentUserId);
-    cleanupCall();
     setCallMessage("User rejected the call");
   }
   return {
@@ -194,6 +191,6 @@ export function useCall() {
     callMessage,
     localStream,
     remoteStream,
-    calling,
+    calling
   };
 }

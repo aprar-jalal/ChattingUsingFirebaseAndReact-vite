@@ -12,7 +12,6 @@ function Chat() {
   const [selectedChat, setSelectedChat] = useState(null);
   const [searchMode, setSearchMode] = useState(false);
   const [searchText, setSearchText] = useState("");
-  const [showCall, setShowCall] = useState(false);
   const { incomingCall, setIncomingCall } = useIncomingCall();
   const {
     startCall,
@@ -25,7 +24,7 @@ function Chat() {
     callMessage,
   } = useCall();
   const { user } = useAuth();
- 
+
   return (
     <div className={styles.Container}>
       <div>
@@ -39,7 +38,6 @@ function Chat() {
           searchText={searchText}
           setSearchText={setSearchText}
           startCall={startCall}
-          setShowCall={setShowCall}
         />
         <ChatMessages
           selectedChat={selectedChat}
@@ -52,7 +50,6 @@ function Chat() {
             onAccept={async (call) => {
               await acceptCall(call, user.uid);
               setIncomingCall(null);
-              setShowCall(true);
             }}
             onDecline={async (callId) => {
               await declineCall(callId, user.uid);
@@ -60,17 +57,15 @@ function Chat() {
             }}
           />
         )}
-        {(showCall || calling) && (
+        {calling && (
           <VideoCall
             localStream={localStream}
             remoteStream={remoteStream}
             onClose={() => {
               hangUp(user.uid);
-              setShowCall(false);
             }}
           />
         )}
-        
       </div>
     </div>
   );
