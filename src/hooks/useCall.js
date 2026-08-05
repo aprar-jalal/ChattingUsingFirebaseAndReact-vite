@@ -26,7 +26,6 @@ export function useCall() {
 
   const [callMessage, setCallMessage] = useState(null);
   const currentUserRef = useRef(null);
-
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
   const callIdRef = useRef(null);
@@ -194,6 +193,6 @@ export function useCall() {
     callMessage,
     localStream,
     remoteStream,
-    calling,
+    calling
   };
 }

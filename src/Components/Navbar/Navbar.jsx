@@ -15,7 +15,6 @@ function Navbar({
   searchText,
   setSearchText,
   startCall,
-  setShowCall
 }) {
   // who is the current user
   const { user: currentUser } = useAuth();
@@ -88,7 +87,6 @@ function Navbar({
         <i
           className="fa-solid fa-phone"
           onClick={() => {
-            setShowCall(true);
             startCall(currentUser.uid, otherUserId);
           }}
         ></i>
