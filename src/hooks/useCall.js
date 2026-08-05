@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-
 import {
   createPeerConnection,
   getLocalStream,
@@ -17,196 +16,150 @@ import {
 } from "../services/CallServices";
 
 export function useCall() {
+  //for users cam and mic stream
   const [localStream, setLocalStream] = useState(null);
+  //for the other user cam and mic stream
   const [remoteStream, setRemoteStream] = useState(null);
-  const [callId, setCallId] = useState(null);
+  //knows if there is a call or not
   const [calling, setCalling] = useState(false);
 
   const peerConnectionRef = useRef(null);
+  // stores the call id from the firebase
   const callIdRef = useRef(null);
-
-  // store all firestore listeners
+  // to stop the firebase listner like snapshot when the call is ended
   const listenersRef = useRef([]);
-
-  // ICE generated before call document exists
+  // to store candidates untile the call is created in firebase
   const pendingCandidates = useRef([]);
 
+  /**************************Start Call***************************************/
   async function startCall(currentUserId, receiverId) {
+    //returns RTCPeerConnection
     const pc = createPeerConnection(
       async (candidate) => {
+        // do we have and callId? if yes add ice to the firebase
         if (callIdRef.current) {
           await addIceCandidate(
             callIdRef.current,
             "callerCandidates",
             candidate,
           );
-        } else {
+        }
+        // the ice came fast before the documnet is created in the firebase so we store it temproray
+        else {
           pendingCandidates.current.push(candidate);
         }
       },
-
+      // receves the other user stream
       (stream) => {
-        console.log("REMOTE STREAM RECEIVED", stream);
-
         setRemoteStream(stream);
       },
     );
-
     peerConnectionRef.current = pc;
-
+    // to have the premition to the mic and cam
     const stream = await getLocalStream();
-
     setLocalStream(stream);
-
+    //we add the cam and mic to the webRTC connection
     addTracks(pc, stream);
 
+    // the user says i want to make connection so webRTC makes the connection description as object
     const offer = await pc.createOffer();
-
+    //here we give the RTCPeerConnection the call descreption
     await pc.setLocalDescription(offer);
-    pc.getSenders().forEach((sender) => {
-      console.log(
-        "SENDER",
-        sender.track.kind,
-        sender.track.readyState,
-        sender.track.enabled,
-      );
-    });
 
+    // here we make a call in firebase
     const id = await createCall(currentUserId, receiverId, {
       type: offer.type,
       sdp: offer.sdp,
     });
-
-    console.log("CALL CREATED:", id);
-
     callIdRef.current = id;
 
-    // upload pending ICE
+    // this is for adding the ice that came fast in firebase
     for (const candidate of pendingCandidates.current) {
       await addIceCandidate(id, "callerCandidates", candidate);
     }
-
     pendingCandidates.current = [];
-
-    setCallId(id);
-
+    // listenToCallAnswer isten to this call if it has an answer tell me  and it tells WebRTC this is the
+    //other user data store it
     const unsubscribeAnswer = listenToCallAnswer(id, pc);
-
+    //liten to the other user candidate if it changes so that ther webRTC can fined the connection path
     const unsubscribeCandidates = listenToCandidates(
       id,
       "receiverCandidates",
       pc,
     );
-
     listenersRef.current.push(unsubscribeAnswer, unsubscribeCandidates);
-
     setCalling(true);
   }
 
+  /**************************Accept Call***************************************/
   async function acceptCall(call) {
     const pc = createPeerConnection(
+      //the recver finds connection pathes and pushs his candidate to the firebase so its from reciver to sender
       async (candidate) => {
         await addIceCandidate(call.id, "receiverCandidates", candidate);
       },
-
+      //receves the audio and cam from the other user
       (stream) => {
-        console.log("REMOTE STREAM RECEIVED", stream);
-
         setRemoteStream(stream);
       },
     );
-
     peerConnectionRef.current = pc;
-
-    /*
-       Start listening ICE
-       only once
-    */
-
+    //here it tell's the webRTC this the offer save it
     await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
-
+    // we read the other user candidate and make webRTC save it
     const unsubscribeCandidates = listenToCandidates(
       call.id,
       "callerCandidates",
       pc,
     );
-
     listenersRef.current.push(unsubscribeCandidates);
 
     const stream = await getLocalStream();
-
     setLocalStream(stream);
-
     addTracks(pc, stream);
-    console.log("LOCAL TRACKS", stream.getTracks());
 
+    // this tells that im ready to answer
     const answer = await pc.createAnswer();
-
+    // save the asnswer loacaly
     await pc.setLocalDescription(answer);
-
-    await answerCall(
-      call.id,
-
-      {
-        type: pc.localDescription.type,
-        sdp: pc.localDescription.sdp,
-      },
-    );
-
-    console.log("ANSWER SET SUCCESS");
-
-    setCallId(call.id);
-
+    // sending the answer to ther firebase
+    await answerCall(call.id, {
+      type: pc.localDescription.type,
+      sdp: pc.localDescription.sdp,
+    });
     callIdRef.current = call.id;
-
     setCalling(true);
   }
 
+  /**************************Stop Call***************************************/
   async function hangUp() {
     // remove firestore listeners
-
     listenersRef.current.forEach((unsubscribe) => {
       if (typeof unsubscribe === "function") {
         unsubscribe();
       }
     });
-
     listenersRef.current = [];
-
     if (callIdRef.current) {
+      //changes the statuse on firebase
       await endCall(callIdRef.current);
     }
+    //closes the webRTC connection
+    closeConnection(peerConnectionRef.current);
 
-    closeConnection();
-
-    if (localStream) {
-      localStream.getTracks().forEach((track) => {
-        track.stop();
-      });
-    }
-
+    peerConnectionRef.current = null;
     setLocalStream(null);
-
     setRemoteStream(null);
-
-    setCallId(null);
-
     callIdRef.current = null;
-
     setCalling(false);
   }
 
   return {
     startCall,
-
     acceptCall,
-
     hangUp,
-
     localStream,
-
     remoteStream,
-
     calling,
   };
 }

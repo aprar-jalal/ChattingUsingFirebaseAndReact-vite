@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./IncomingCall.module.css";
+import { useAuth } from "../../Context/AuthContext";
 
 function IncomingCall({
   call,
@@ -8,15 +9,16 @@ function IncomingCall({
 }) {
 
   if (!call) return null;
+  const {user}=useAuth()
   return (
     <div className={styles.overlay}>
       <div className={styles.box}>
         <i className="fa-solid fa-phone-volume"></i>
-        <h2>
+        <h2 className={styles.headingText}>
           Incoming Call
         </h2>
-        <p>
-          Someone is calling you...
+        <p className={styles.subHeadingText}>
+          {user.Name || <p>someone Is Calling...</p>}
         </p>
         <div className={styles.buttons}>
           <button

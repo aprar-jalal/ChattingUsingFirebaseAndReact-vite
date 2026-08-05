@@ -9,19 +9,27 @@
 }
 .box {
     background:white;
-    width:320px;
-    padding:30px;
-    border-radius:15px;
+    width:400px;
+    padding:25px;
+    border-radius:25px;
     text-align:center;
 }
 .box i {
     font-size:40px;
-    color:#4caf50;
+    color:var(--Light-Green);
+}
+.headingText{
+    margin:15px 0 ;
+    color:var(--Iceberg-Blue);
+}
+.subHeadingText{
+    margin:15px 0 ;
+    color:var(--Navy-Grey);
 }
 .buttons {
     display:flex;
     justify-content:center;
-    gap:20px;
+    gap:30px;
     margin-top:20px;
 }
 .buttons button {
@@ -32,11 +40,11 @@
 }
 
 .accept {
-    background:#4caf50;
+    background:var(--Light-Green);
     color:white;
 }
 
 .decline {
-    background:#f44336;
+    background:var(--Red);
     color:white;
 }

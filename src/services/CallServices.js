@@ -3,9 +3,10 @@ import {
   doc,
   addDoc,
   updateDoc,
-  getDoc,
   onSnapshot,
   serverTimestamp,
+  query,
+  where,
 } from "firebase/firestore";
 
 import { db } from "../config/firebase-config";
@@ -18,20 +19,26 @@ export async function createCall(callerId, receiverId, offer) {
     offer,
     type: "video",
     status: "ringing",
+    // cuz the other user didnt answer yet
     answer: null,
     createdAt: serverTimestamp(),
   });
   //retrun the id of the calls collection
   return callRef.id;
 }
+
+
+// this for the other user to always listen to the firebase so if any user creats a call it will appear dirctly
 export function listenToIncomingCalls(userId, onSuccess) {
-  const q = collection(db, "calls");
+  const q = query(
+  collection(db, "calls"),
+  where("receiverId", "==", userId)
+);
   return onSnapshot(q, (snapshot) => {
     const calls = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
-
     const incoming = calls.filter((call) => {
       return call.receiverId === userId && call.status === "ringing";
     });
@@ -57,26 +64,33 @@ export async function endCall(callId) {
     endedAt: serverTimestamp(),
   });
 }
+
+// for the caller to add it's candidate to the firebase
 export async function addIceCandidate(callId, type, candidate) {
-  console.log("UPLOAD ICE:", type, candidate.type);
+  // and it's a subcollection cuz there so many candidate can be produced
   await addDoc(collection(db, "calls", callId, type), candidate.toJSON());
 }
+
+// for the reciver
 export function listenToCandidates(callId, type, pc) {
+  // the ice may come faster than the answer or offer so we need to store them temp
   const queue = [];
   return onSnapshot(collection(db, "calls", callId, type), async (snapshot) => {
     for (const change of snapshot.docChanges()) {
       if (change.type === "added") {
+        //retrun  WebRTC object
         const candidate = new RTCIceCandidate(change.doc.data());
-        console.log("RECEIVED ICE:", candidate.type);
+        // if the connection 
         if (pc.remoteDescription) {
+          //is ready add the candidate
           await pc.addIceCandidate(candidate);
-          console.log("ICE ADDED DIRECT");
         } else {
-          console.log("ICE QUEUED");
+          // is not ready sotore it in queue
           queue.push(candidate);
         }
       }
     }
+    //if the connection is ready and there is candidate waiting in queue
     if (pc.remoteDescription && queue.length) {
       for (const candidate of queue) {
         if (
@@ -91,7 +105,7 @@ export function listenToCandidates(callId, type, pc) {
   });
 }
 
-// listen for answer
+// this is for the caller only
 export function listenToCallAnswer(callId, pc) {
   const unsubscribe = onSnapshot(doc(db, "calls", callId), async (snapshot) => {
     const data = snapshot.data();
