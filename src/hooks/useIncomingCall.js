@@ -8,16 +8,16 @@ export function useIncomingCall() {
   useEffect(() => {
     if (!currentUser) return;
     const unsubscribe = listenToIncomingCalls(currentUser.uid, (calls) => {
-      // if there si calls 
       if (calls.length > 0) {
-        // take the first call
         setIncomingCall(calls[0]);
+      } else {
+        setIncomingCall(null);
       }
     });
     return unsubscribe;
   }, [currentUser]);
   return {
-   incomingCall,
-   setIncomingCall
-  }
+    incomingCall,
+    setIncomingCall,
+  };
 }

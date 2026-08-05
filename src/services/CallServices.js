@@ -29,7 +29,7 @@ export async function createCall(callerId, receiverId, offer) {
 
 // this for the other user to always listen to the firebase so if any user creats a call it will appear dirctly
 export function listenToIncomingCalls(userId, onSuccess) {
-  const q = query(collection(db, "calls"), where("receiverId", "==", userId));
+  const q = query(collection(db, "calls"), where("receiverId", "==", userId), where("status","==","ringing"));
   return onSnapshot(q, (snapshot) => {
     const calls = snapshot.docs.map((doc) => ({
       id: doc.id,
