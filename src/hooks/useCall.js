@@ -24,7 +24,8 @@ export function useCall() {
   //knows if there is a call or not
   const [calling, setCalling] = useState(false);
 
-  const [callMessage,setCallMessage]=useState(null);
+  const [callMessage, setCallMessage] = useState(null);
+  const currentUserRef = useRef(null);
 
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
@@ -34,7 +35,6 @@ export function useCall() {
   // to store candidates untile the call is created in firebase
   const pendingCandidates = useRef([]);
 
-  
   /**************************Start Call***************************************/
   async function startCall(currentUserId, receiverId) {
     //returns RTCPeerConnection
@@ -91,16 +91,26 @@ export function useCall() {
       "receiverCandidates",
       pc,
     );
-    const unsubscribeStatus = listenToCallStatus(id, () => {
-      hangUp();
-      setCallMessage(`User rejected the call`);
-    });
-    listenersRef.current.push(unsubscribeAnswer, unsubscribeCandidates,unsubscribeStatus);
+    const unsubscribeStatus = listenToCallStatus(
+      id,
+      currentUserId,
+      (endedBy) => {
+        cleanupCall();
+
+        setCallMessage("The user rejected the call");
+      },
+    );
+    listenersRef.current.push(
+      unsubscribeAnswer,
+      unsubscribeCandidates,
+      unsubscribeStatus,
+    );
+    currentUserRef.current = currentUserId;
     setCalling(true);
   }
 
   /**************************Accept Call***************************************/
-  async function acceptCall(call) {
+  async function acceptCall(call, currentUserId) {
     const pc = createPeerConnection(
       //the recver finds connection pathes and pushs his candidate to the firebase so its from reciver to sender
       async (candidate) => {
@@ -120,8 +130,11 @@ export function useCall() {
       "callerCandidates",
       pc,
     );
-    
-    listenersRef.current.push(unsubscribeCandidates);
+    const unsubscribeStatus = listenToCallStatus(call.id, currentUserId, () => {
+      cleanupCall();
+      setCallMessage("Caller ended the call");
+    });
+    listenersRef.current.push(unsubscribeCandidates, unsubscribeStatus);
 
     const stream = await getLocalStream();
     setLocalStream(stream);
@@ -137,23 +150,18 @@ export function useCall() {
       sdp: pc.localDescription.sdp,
     });
     callIdRef.current = call.id;
+    currentUserRef.current = currentUserId;
     setCalling(true);
   }
 
   /**************************Stop Call***************************************/
-  async function hangUp() {
-    // remove firestore listeners
+  function cleanupCall() {
     listenersRef.current.forEach((unsubscribe) => {
       if (typeof unsubscribe === "function") {
         unsubscribe();
       }
     });
     listenersRef.current = [];
-    if (callIdRef.current) {
-      //changes the statuse on firebase
-      await endCall(callIdRef.current);
-    }
-    //closes the webRTC connection
     closeConnection(peerConnectionRef.current);
 
     peerConnectionRef.current = null;
@@ -163,10 +171,27 @@ export function useCall() {
     setCalling(false);
   }
 
+ async function hangUp(currentUserId) {
+  if(callIdRef.current){
+    await endCall(
+      callIdRef.current,
+      currentUserId
+    );
+  }
+  cleanupCall();
+}
+
+  async function declineCall(callId, currentUserId) {
+    await endCall(callId, currentUserId);
+    cleanupCall();
+    setCallMessage("User rejected the call");
+  }
   return {
     startCall,
     acceptCall,
     hangUp,
+    declineCall,
+    callMessage,
     localStream,
     remoteStream,
     calling,

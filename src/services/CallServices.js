@@ -27,13 +27,9 @@ export async function createCall(callerId, receiverId, offer) {
   return callRef.id;
 }
 
-
 // this for the other user to always listen to the firebase so if any user creats a call it will appear dirctly
 export function listenToIncomingCalls(userId, onSuccess) {
-  const q = query(
-  collection(db, "calls"),
-  where("receiverId", "==", userId)
-);
+  const q = query(collection(db, "calls"), where("receiverId", "==", userId));
   return onSnapshot(q, (snapshot) => {
     const calls = snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -57,10 +53,11 @@ export async function answerCall(callId, answer) {
   });
 }
 
-export async function endCall(callId) {
+export async function endCall(callId,userId) {
   const callRef = doc(db, "calls", callId);
   await updateDoc(callRef, {
     status: "ended",
+    endedBy:userId,
     endedAt: serverTimestamp(),
   });
 }
@@ -80,7 +77,7 @@ export function listenToCandidates(callId, type, pc) {
       if (change.type === "added") {
         //retrun  WebRTC object
         const candidate = new RTCIceCandidate(change.doc.data());
-        // if the connection 
+        // if the connection
         if (pc.remoteDescription) {
           //is ready add the candidate
           await pc.addIceCandidate(candidate);
@@ -124,12 +121,12 @@ export function listenToCallAnswer(callId, pc) {
   return unsubscribe;
 }
 
-export function listenToCallStatus(callId, onRejected) {
-  return onSnapshot(doc(db, "calls", callId), (snapshot)=>{
+export function listenToCallStatus(callId, currentUserId, onEnded) {
+  return onSnapshot(doc(db, "calls", callId), (snapshot) => {
     const data = snapshot.data();
-    if(!data) return;
-    if(data.status === "ended"){
-      onRejected();
+    if (!data) return;
+    if (data.status === "ended" && data.endedBy !== currentUserId) {
+      onEnded(data.endedBy);
     }
   });
 }
