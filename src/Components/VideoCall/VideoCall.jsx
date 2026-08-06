@@ -9,6 +9,9 @@ function VideoCall({
   toggleMic,
   isMuted,
   cameraOn,
+  remoteCameraOn,
+  userPhoto,
+  userName,
 }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -30,19 +33,35 @@ function VideoCall({
     <div className={styles.overlay}>
       <div className={styles.callContainer}>
         <div className={styles.videoContainer}>
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className={styles.remoteVideo}
-          />
+          {remoteCameraOn ? (
+            <div className={styles.videoContainer}>
+              <video
+                ref={remoteVideoRef}
+                autoPlay
+                playsInline
+                className={styles.remoteVideo}
+              />
 
-          <video
-            ref={localVideoRef}
-            autoPlay
-            playsInline
-            className={styles.localVideo}
-          />
+              {cameraOn && (
+                <video
+                  ref={localVideoRef}
+                  autoPlay
+                  playsInline
+                  className={styles.localVideo}
+                />
+              )}
+            </div>
+          ) : (
+            <div className={styles.audioCallScreen}>
+              <img src={userPhoto} className={styles.avatar} />
+
+              <h2 className={styles.userName}>{userName}</h2>
+
+              <p className={styles.callTimer}>
+                minutes:seconds
+              </p>
+            </div>
+          )}
         </div>
 
         <div className={styles.controls}>
@@ -56,8 +75,11 @@ function VideoCall({
             ></i>
           </button>
           <button className={styles.controlButton} onClick={toggleCamera}>
-           <i className={cameraOn?"fa-solid fa-video"
-          : "fa-solid fa-video-slash"}></i>
+            <i
+              className={
+                cameraOn ? "fa-solid fa-video" : "fa-solid fa-video-slash"
+              }
+            ></i>
           </button>
           <button className={styles.endButton} onClick={onClose}>
             <i className="fa-solid fa-phone-slash"></i>
