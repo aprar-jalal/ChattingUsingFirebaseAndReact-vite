@@ -28,6 +28,9 @@ export function useCall() {
   const [cameraOn, setCameraOn] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [remoteCameraOn, setRemoteCameraOn] = useState(false);
+  const [remoteUserId, setRemoteUserId] = useState(null);
+ const [connected, setConnected] = useState(false);
+
   const currentUserRef = useRef(null);
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
@@ -58,22 +61,24 @@ export function useCall() {
       // receves the other user stream
       (stream) => {
         setRemoteStream(stream);
-        const videoTrack = stream.getVideoTracks()[0];
+       const videoTrack = stream.getVideoTracks()[0];
 
         if (videoTrack) {
-          setRemoteCameraOn(videoTrack.enabled);
-
+          setRemoteCameraOn(false);
           videoTrack.onunmute = () => {
             setRemoteCameraOn(true);
           };
-
           videoTrack.onmute = () => {
+            setRemoteCameraOn(false);
+          };
+          videoTrack.onended = () => {
             setRemoteCameraOn(false);
           };
         }
       },
     );
     peerConnectionRef.current = pc;
+    setRemoteUserId(receiverId);
     // to have the premition to the mic and cam
     const stream = await getLocalStream();
     setLocalStream(stream);
@@ -99,7 +104,9 @@ export function useCall() {
     pendingCandidates.current = [];
     // listenToCallAnswer isten to this call if it has an answer tell me  and it tells WebRTC this is the
     //other user data store it
-    const unsubscribeAnswer = listenToCallAnswer(id, pc);
+    const unsubscribeAnswer = listenToCallAnswer(id, pc,()=>{
+      setConnected(true);
+    });
     //liten to the other user candidate if it changes so that ther webRTC can fined the connection path
     const unsubscribeCandidates = listenToCandidates(
       id,
@@ -136,7 +143,7 @@ export function useCall() {
         const videoTrack = stream.getVideoTracks()[0];
 
         if (videoTrack) {
-          setRemoteCameraOn(videoTrack.enabled);
+          setRemoteCameraOn(false);
 
           videoTrack.onunmute = () => {
             setRemoteCameraOn(true);
@@ -149,12 +156,12 @@ export function useCall() {
           videoTrack.onended = () => {
             setRemoteCameraOn(false);
           };
-        } else {
-          setRemoteCameraOn(false);
         }
       },
     );
+
     peerConnectionRef.current = pc;
+    setRemoteUserId(call.callerId);
     //here it tell's the webRTC this the offer save it
     await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
     // we read the other user candidate and make webRTC save it
@@ -182,6 +189,7 @@ export function useCall() {
       type: pc.localDescription.type,
       sdp: pc.localDescription.sdp,
     });
+    setConnected(true);
     callIdRef.current = call.id;
     currentUserRef.current = currentUserId;
     setCalling(true);
@@ -200,6 +208,7 @@ export function useCall() {
     peerConnectionRef.current = null;
     setCameraOn(false);
     setIsMuted(false);
+    setRemoteUserId(null);
     setRemoteCameraOn(false);
     setLocalStream(null);
     setRemoteStream(null);
@@ -250,5 +259,7 @@ export function useCall() {
     localStream,
     remoteStream,
     calling,
+    remoteUserId,
+    connected,
   };
 }

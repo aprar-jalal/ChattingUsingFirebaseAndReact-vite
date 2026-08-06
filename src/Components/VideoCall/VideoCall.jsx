@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./VideoCall.module.css";
-import { useAuth } from "../../Context/AuthContext";
 import { useUser } from "../../hooks/useUser";
 
 function VideoCall({
@@ -12,61 +11,62 @@ function VideoCall({
   isMuted,
   cameraOn,
   remoteCameraOn,
-  userPhoto,
-  userName,
-  selectedChat
+  remoteUserId,
+  connected
 }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-   const { user: currentUser } = useAuth();
-    // the other user id
-    const otherUserId = selectedChat?.members?.find(
-      (id) => id !== currentUser?.uid,
-    );
-   const { user: otherUser } = useUser(otherUserId);
+
+  const { user: otherUser } = useUser(remoteUserId);
+
+  // Set local video stream
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
     }
   }, [localStream]);
 
+  // Set remote video stream
   useEffect(() => {
     if (remoteStream && remoteVideoRef.current) {
       remoteVideoRef.current.srcObject = remoteStream;
-      remoteVideoRef.current.play();
+
+      remoteVideoRef.current
+        .play()
+        .catch((err) => console.log("Remote video error:", err));
     }
   }, [remoteStream]);
+
   return (
     <div className={styles.overlay}>
       <div className={styles.callContainer}>
         <div className={styles.videoContainer}>
-          {remoteCameraOn && remoteStream ? (
-            <>
-              <video
-                ref={remoteVideoRef}
-                autoPlay
-                playsInline
-                className={styles.remoteVideo}
-              />
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className={remoteCameraOn ? styles.remoteVideo : styles.hiddenVideo}
+          />
 
-              {cameraOn && (
-                <video
-                  ref={localVideoRef}
-                  autoPlay
-                  playsInline
-                  className={styles.localVideo}
-                />
-              )}
-            </>
-          ) : (
+          {connected && !remoteCameraOn && (
             <div className={styles.audioCallScreen}>
-              <img src={otherUser?.photoURL || "/avatar.png"} className={styles.avatar} />
-
-              <h2 className={styles.userName}>{otherUser?.Name}</h2>
-
+              <img
+                src={otherUser?.photoURL || "/avatar.png"}
+                className={styles.avatar}
+                alt="user"
+              />
+              <h2 className={styles.userName}>{otherUser?.Name || "User"}</h2>
               <p className={styles.callTimer}>00:00</p>
             </div>
           )}
+
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className={cameraOn ? styles.localVideo : styles.hiddenLocalVideo}
+          />
         </div>
 
         <div className={styles.controls}>
