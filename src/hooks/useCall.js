@@ -25,6 +25,9 @@ export function useCall() {
   const [calling, setCalling] = useState(false);
 
   const [callMessage, setCallMessage] = useState(null);
+  const [cameraOn, setCameraOn] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+
   const currentUserRef = useRef(null);
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
@@ -169,28 +172,46 @@ export function useCall() {
     setCalling(false);
   }
 
- async function hangUp(currentUserId) {
-  if(callIdRef.current){
-    await endCall(
-      callIdRef.current,
-      currentUserId
-    );
+  async function hangUp(currentUserId) {
+    if (callIdRef.current) {
+      await endCall(callIdRef.current, currentUserId);
+    }
+    cleanupCall();
   }
-  cleanupCall();
-}
 
   async function declineCall(callId, currentUserId) {
     await endCall(callId, currentUserId);
     setCallMessage("User rejected the call");
   }
+
+  function toggleCamera() {
+    if (!localStream) return;
+    console.log(localStream.getVideoTracks());
+    const track = localStream.getVideoTracks()[0];
+    track.enabled = !track.enabled;
+    setCameraOn(track.enabled);
+    console.log("camera",track.enabled)
+  }
+
+ function toggleMic() {
+  if (!localStream) return;
+  const track = localStream.getAudioTracks()[0];
+  track.enabled = !track.enabled;
+  setIsMuted(!track.enabled);
+  console.log("Mic", track.enabled);
+}
   return {
     startCall,
     acceptCall,
     hangUp,
     declineCall,
+    toggleCamera,
+    toggleMic,
+    isMuted,
+    cameraOn,
     callMessage,
     localStream,
     remoteStream,
-    calling
+    calling,
   };
 }
