@@ -27,7 +27,7 @@ export function useCall() {
   const [callMessage, setCallMessage] = useState(null);
   const [cameraOn, setCameraOn] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-
+  const [remoteCameraOn, setRemoteCameraOn] = useState(false);
   const currentUserRef = useRef(null);
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
@@ -120,6 +120,25 @@ export function useCall() {
       //receves the audio and cam from the other user
       (stream) => {
         setRemoteStream(stream);
+        const videoTrack = stream.getVideoTracks()[0];
+
+        if (videoTrack) {
+          setRemoteCameraOn(videoTrack.enabled);
+
+          videoTrack.onunmute = () => {
+            setRemoteCameraOn(true);
+          };
+
+          videoTrack.onmute = () => {
+            setRemoteCameraOn(false);
+          };
+
+          videoTrack.onended = () => {
+            setRemoteCameraOn(false);
+          };
+        } else {
+          setRemoteCameraOn(false);
+        }
       },
     );
     peerConnectionRef.current = pc;
@@ -166,6 +185,9 @@ export function useCall() {
     closeConnection(peerConnectionRef.current);
 
     peerConnectionRef.current = null;
+    setCameraOn(false);
+    setIsMuted(false);
+    setRemoteCameraOn(false);
     setLocalStream(null);
     setRemoteStream(null);
     callIdRef.current = null;
@@ -181,6 +203,7 @@ export function useCall() {
 
   async function declineCall(callId, currentUserId) {
     await endCall(callId, currentUserId);
+    cleanupCall();
     setCallMessage("User rejected the call");
   }
 
@@ -190,16 +213,16 @@ export function useCall() {
     const track = localStream.getVideoTracks()[0];
     track.enabled = !track.enabled;
     setCameraOn(track.enabled);
-    console.log("camera",track.enabled)
+    console.log("camera", track.enabled);
   }
 
- function toggleMic() {
-  if (!localStream) return;
-  const track = localStream.getAudioTracks()[0];
-  track.enabled = !track.enabled;
-  setIsMuted(!track.enabled);
-  console.log("Mic", track.enabled);
-}
+  function toggleMic() {
+    if (!localStream) return;
+    const track = localStream.getAudioTracks()[0];
+    track.enabled = !track.enabled;
+    setIsMuted(!track.enabled);
+    console.log("Mic", track.enabled);
+  }
   return {
     startCall,
     acceptCall,
@@ -209,6 +232,7 @@ export function useCall() {
     toggleMic,
     isMuted,
     cameraOn,
+    remoteCameraOn,
     callMessage,
     localStream,
     remoteStream,
