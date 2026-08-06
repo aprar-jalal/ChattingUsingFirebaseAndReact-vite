@@ -58,6 +58,19 @@ export function useCall() {
       // receves the other user stream
       (stream) => {
         setRemoteStream(stream);
+        const videoTrack = stream.getVideoTracks()[0];
+
+        if (videoTrack) {
+          setRemoteCameraOn(videoTrack.enabled);
+
+          videoTrack.onunmute = () => {
+            setRemoteCameraOn(true);
+          };
+
+          videoTrack.onmute = () => {
+            setRemoteCameraOn(false);
+          };
+        }
       },
     );
     peerConnectionRef.current = pc;
