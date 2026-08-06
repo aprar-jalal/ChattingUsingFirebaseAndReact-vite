@@ -69,6 +69,7 @@ function Chat() {
             onClose={() => {
               hangUp(user.uid);
             }}
+            selectedChat={selectedChat}
             userName={selectedChat?.name}
             userPhoto={selectedChat?.photoURL}
             toggleCamera={toggleCamera}

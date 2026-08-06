@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import styles from "./VideoCall.module.css";
+import { useAuth } from "../../Context/AuthContext";
+import { useUser } from "../../hooks/useUser";
 
 function VideoCall({
   onClose,
@@ -12,10 +14,16 @@ function VideoCall({
   remoteCameraOn,
   userPhoto,
   userName,
+  selectedChat
 }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-
+   const { user: currentUser } = useAuth();
+    // the other user id
+    const otherUserId = selectedChat?.members?.find(
+      (id) => id !== currentUser?.uid,
+    );
+   const { user: otherUser } = useUser(otherUserId);
   useEffect(() => {
     if (localStream && localVideoRef.current) {
       localVideoRef.current.srcObject = localStream;
@@ -28,13 +36,12 @@ function VideoCall({
       remoteVideoRef.current.play();
     }
   }, [remoteStream]);
-
   return (
     <div className={styles.overlay}>
       <div className={styles.callContainer}>
         <div className={styles.videoContainer}>
-          {remoteCameraOn ? (
-            <div className={styles.videoContainer}>
+          {remoteCameraOn && remoteStream ? (
+            <>
               <video
                 ref={remoteVideoRef}
                 autoPlay
@@ -50,16 +57,14 @@ function VideoCall({
                   className={styles.localVideo}
                 />
               )}
-            </div>
+            </>
           ) : (
             <div className={styles.audioCallScreen}>
-              <img src={userPhoto} className={styles.avatar} />
+              <img src={otherUser.photoURL || "/avatar.png"} className={styles.avatar} />
 
-              <h2 className={styles.userName}>{userName}</h2>
+              <h2 className={styles.userName}>{otherUser.Name}</h2>
 
-              <p className={styles.callTimer}>
-                minutes:seconds
-              </p>
+              <p className={styles.callTimer}>00:00</p>
             </div>
           )}
         </div>
@@ -72,17 +77,19 @@ function VideoCall({
                   ? "fa-solid fa-microphone-slash"
                   : "fa-solid fa-microphone"
               }
-            ></i>
+            />
           </button>
+
           <button className={styles.controlButton} onClick={toggleCamera}>
             <i
               className={
                 cameraOn ? "fa-solid fa-video" : "fa-solid fa-video-slash"
               }
-            ></i>
+            />
           </button>
+
           <button className={styles.endButton} onClick={onClose}>
-            <i className="fa-solid fa-phone-slash"></i>
+            <i className="fa-solid fa-phone-slash" />
           </button>
         </div>
       </div>
