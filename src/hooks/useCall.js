@@ -14,6 +14,9 @@ import {
   listenToCallAnswer,
   listenToCandidates,
   listenToCallStatus,
+  listenToCameraStatus,
+  updateCameraStatus,
+  listenToConnectedAt,
 } from "../services/CallServices";
 
 export function useCall() {
@@ -29,8 +32,9 @@ export function useCall() {
   const [isMuted, setIsMuted] = useState(false);
   const [remoteCameraOn, setRemoteCameraOn] = useState(false);
   const [remoteUserId, setRemoteUserId] = useState(null);
- const [connected, setConnected] = useState(false);
-
+  const [connectedAt, setConnectedAt] = useState(null);
+  
+  const isCallerRef = useRef(false);
   const currentUserRef = useRef(null);
   const peerConnectionRef = useRef(null);
   // stores the call id from the firebase
@@ -61,26 +65,12 @@ export function useCall() {
       // receves the other user stream
       (stream) => {
         setRemoteStream(stream);
-       const videoTrack = stream.getVideoTracks()[0];
-
-        if (videoTrack) {
-          setRemoteCameraOn(false);
-          videoTrack.onunmute = () => {
-            setRemoteCameraOn(true);
-          };
-          videoTrack.onmute = () => {
-            setRemoteCameraOn(false);
-          };
-          videoTrack.onended = () => {
-            setRemoteCameraOn(false);
-          };
-        }
       },
     );
     peerConnectionRef.current = pc;
-    setRemoteUserId(receiverId);
     // to have the premition to the mic and cam
     const stream = await getLocalStream();
+    stream.getVideoTracks()[0].enabled = false;
     setLocalStream(stream);
     //we add the cam and mic to the webRTC connection
     addTracks(pc, stream);
@@ -104,9 +94,7 @@ export function useCall() {
     pendingCandidates.current = [];
     // listenToCallAnswer isten to this call if it has an answer tell me  and it tells WebRTC this is the
     //other user data store it
-    const unsubscribeAnswer = listenToCallAnswer(id, pc,()=>{
-      setConnected(true);
-    });
+    const unsubscribeAnswer = listenToCallAnswer(id, pc);
     //liten to the other user candidate if it changes so that ther webRTC can fined the connection path
     const unsubscribeCandidates = listenToCandidates(
       id,
@@ -121,11 +109,22 @@ export function useCall() {
         setCallMessage("The user rejected the call");
       },
     );
+    isCallerRef.current = true;
+    const unsubscribeCamera = listenToCameraStatus(id, true, (on) => {
+      setRemoteCameraOn(on);
+    });
+    const unsubscribeConnectedAt = listenToConnectedAt(id, (date) => {
+      setConnectedAt(date);
+    });
     listenersRef.current.push(
       unsubscribeAnswer,
       unsubscribeCandidates,
       unsubscribeStatus,
+      unsubscribeCamera,
+      unsubscribeConnectedAt,
     );
+
+    setRemoteUserId(receiverId);
     currentUserRef.current = currentUserId;
     setCalling(true);
   }
@@ -140,28 +139,9 @@ export function useCall() {
       //receves the audio and cam from the other user
       (stream) => {
         setRemoteStream(stream);
-        const videoTrack = stream.getVideoTracks()[0];
-
-        if (videoTrack) {
-          setRemoteCameraOn(false);
-
-          videoTrack.onunmute = () => {
-            setRemoteCameraOn(true);
-          };
-
-          videoTrack.onmute = () => {
-            setRemoteCameraOn(false);
-          };
-
-          videoTrack.onended = () => {
-            setRemoteCameraOn(false);
-          };
-        }
       },
     );
-
     peerConnectionRef.current = pc;
-    setRemoteUserId(call.callerId);
     //here it tell's the webRTC this the offer save it
     await pc.setRemoteDescription(new RTCSessionDescription(call.offer));
     // we read the other user candidate and make webRTC save it
@@ -174,9 +154,22 @@ export function useCall() {
       cleanupCall();
       setCallMessage("Caller ended the call");
     });
-    listenersRef.current.push(unsubscribeCandidates, unsubscribeStatus);
+    isCallerRef.current = false;
+    const unsubscribeCamera = listenToCameraStatus(call.id, false, (on) => {
+      setRemoteCameraOn(on);
+    });
+   const unsubscribeConnectedAt = listenToConnectedAt(call.id, (date) => {
+  setConnectedAt(date);
+});
+listenersRef.current.push(
+  unsubscribeCandidates,
+  unsubscribeStatus,
+  unsubscribeCamera,
+  unsubscribeConnectedAt, // ← ضيفها
+);
 
     const stream = await getLocalStream();
+    stream.getVideoTracks()[0].enabled = false;
     setLocalStream(stream);
     addTracks(pc, stream);
 
@@ -189,9 +182,9 @@ export function useCall() {
       type: pc.localDescription.type,
       sdp: pc.localDescription.sdp,
     });
-    setConnected(true);
     callIdRef.current = call.id;
     currentUserRef.current = currentUserId;
+    setRemoteUserId(call.callerId);
     setCalling(true);
   }
 
@@ -208,10 +201,9 @@ export function useCall() {
     peerConnectionRef.current = null;
     setCameraOn(false);
     setIsMuted(false);
-    setRemoteUserId(null);
-    setRemoteCameraOn(false);
     setLocalStream(null);
     setRemoteStream(null);
+    setConnectedAt(null);
     callIdRef.current = null;
     setCalling(false);
   }
@@ -231,11 +223,13 @@ export function useCall() {
 
   function toggleCamera() {
     if (!localStream) return;
-    console.log(localStream.getVideoTracks());
     const track = localStream.getVideoTracks()[0];
     track.enabled = !track.enabled;
     setCameraOn(track.enabled);
-    console.log("camera", track.enabled);
+    if (callIdRef.current) {
+      const field = isCallerRef.current ? "callerCameraOn" : "receiverCameraOn";
+      updateCameraStatus(callIdRef.current, field, track.enabled);
+    }
   }
 
   function toggleMic() {
@@ -252,14 +246,14 @@ export function useCall() {
     declineCall,
     toggleCamera,
     toggleMic,
+    remoteCameraOn,
+    remoteUserId,
     isMuted,
     cameraOn,
-    remoteCameraOn,
     callMessage,
     localStream,
     remoteStream,
     calling,
-    remoteUserId,
-    connected,
+    connectedAt
   };
 }

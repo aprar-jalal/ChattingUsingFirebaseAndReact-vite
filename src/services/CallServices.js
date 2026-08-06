@@ -19,9 +19,11 @@ export async function createCall(callerId, receiverId, offer) {
     offer,
     type: "video",
     status: "ringing",
+    callerCameraOn: false,
+    receiverCameraOn: false,
     // cuz the other user didnt answer yet
     answer: null,
-    createdAt: serverTimestamp(),
+    connectedAt: serverTimestamp()
   });
   //retrun the id of the calls collection
   return callRef.id;
@@ -132,6 +134,28 @@ export function listenToCallStatus(callId, currentUserId, onEnded) {
     if (!data) return;
     if (data.status === "ended" && data.endedBy !== currentUserId) {
       onEnded(data.endedBy);
+    }
+  });
+}
+
+export async function updateCameraStatus(callId, field, value) {
+  const callRef = doc(db, "calls", callId);
+  await updateDoc(callRef, { [field]: value });
+}
+
+export function listenToCameraStatus(callId, isCaller, onChange) {
+  return onSnapshot(doc(db, "calls", callId), (snapshot) => {
+    const data = snapshot.data();
+    if (!data) return;
+    const remoteField = isCaller ? "receiverCameraOn" : "callerCameraOn";
+    onChange(!!data[remoteField]);
+  });
+}
+export function listenToConnectedAt(callId, onConnected) {
+  return onSnapshot(doc(db, "calls", callId), (snapshot) => {
+    const data = snapshot.data();
+    if (data?.connectedAt) {
+      onConnected(data.connectedAt.toDate());
     }
   });
 }
