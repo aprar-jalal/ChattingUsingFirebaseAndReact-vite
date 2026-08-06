@@ -107,7 +107,7 @@ export function listenToCandidates(callId, type, pc) {
 }
 
 // this is for the caller only
-export function listenToCallAnswer(callId, pc) {
+export function listenToCallAnswer(callId, pc,onConnected) {
   const unsubscribe = onSnapshot(doc(db, "calls", callId), async (snapshot) => {
     const data = snapshot.data();
     if (!data?.answer) return;
@@ -120,6 +120,7 @@ export function listenToCallAnswer(callId, pc) {
       return;
     }
     await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+    onConnected();
     console.log("REMOTE DESCRIPTION SET");
   });
   return unsubscribe;

@@ -27,6 +27,8 @@ function Chat() {
     localStream,
     remoteStream,
     calling,
+    remoteUserId,
+    connected
   } = useCall();
   const { user } = useAuth();
 
@@ -69,14 +71,13 @@ function Chat() {
             onClose={() => {
               hangUp(user.uid);
             }}
-            selectedChat={selectedChat}
-            userName={selectedChat?.name}
-            userPhoto={selectedChat?.photoURL}
+            remoteUserId={remoteUserId}
             toggleCamera={toggleCamera}
             toggleMic={toggleMic}
             cameraOn={cameraOn}
             isMuted={isMuted}
             remoteCameraOn={remoteCameraOn}
+            connected={connected}
           />
         )}
       </div>
