@@ -28,7 +28,7 @@ function Chat() {
     remoteStream,
     calling,
     remoteUserId,
-    connected
+    connectedAt
   } = useCall();
   const { user } = useAuth();
 
@@ -77,7 +77,7 @@ function Chat() {
             cameraOn={cameraOn}
             isMuted={isMuted}
             remoteCameraOn={remoteCameraOn}
-            connected={connected}
+            connectedAt={connectedAt}
           />
         )}
       </div>

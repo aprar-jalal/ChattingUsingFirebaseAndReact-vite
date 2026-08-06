@@ -37,9 +37,6 @@ export async function getLocalStream() {
     height: 480,
   },
 });
-stream.getVideoTracks().forEach(track=>{
-    track.enabled = false;
-});
 return stream;
 }
 

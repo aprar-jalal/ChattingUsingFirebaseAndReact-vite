@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./VideoCall.module.css";
 import { useUser } from "../../hooks/useUser";
 
@@ -12,12 +12,32 @@ function VideoCall({
   cameraOn,
   remoteCameraOn,
   remoteUserId,
-  connected
+  connectedAt,
 }) {
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-
+  console.log("remote tracks", remoteStream?.getVideoTracks());
   const { user: otherUser } = useUser(remoteUserId);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!connectedAt) return;
+
+    const tick = () => {
+      const seconds = Math.floor((Date.now() - connectedAt.getTime()) / 1000);
+      setElapsed(seconds > 0 ? seconds : 0);
+    };
+
+    tick();
+    const intervalId = setInterval(tick, 1000);
+    return () => clearInterval(intervalId);
+  }, [connectedAt]);
+
+  function formatTime(totalSeconds) {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
 
   // Set local video stream
   useEffect(() => {
@@ -41,14 +61,14 @@ function VideoCall({
     <div className={styles.overlay}>
       <div className={styles.callContainer}>
         <div className={styles.videoContainer}>
-          <video
-            ref={remoteVideoRef}
-            autoPlay
-            playsInline
-            className={remoteCameraOn ? styles.remoteVideo : styles.hiddenVideo}
-          />
-
-          {connected && !remoteCameraOn && (
+          {remoteCameraOn ? (
+            <video
+              ref={remoteVideoRef}
+              autoPlay
+              playsInline
+              className={styles.remoteVideo}
+            />
+          ) : (
             <div className={styles.audioCallScreen}>
               <img
                 src={otherUser?.photoURL || "/avatar.png"}
@@ -56,10 +76,9 @@ function VideoCall({
                 alt="user"
               />
               <h2 className={styles.userName}>{otherUser?.Name || "User"}</h2>
-              <p className={styles.callTimer}>00:00</p>
+              <p className={styles.callTimer}>{formatTime(elapsed)}</p>
             </div>
           )}
-
           <video
             ref={localVideoRef}
             autoPlay
