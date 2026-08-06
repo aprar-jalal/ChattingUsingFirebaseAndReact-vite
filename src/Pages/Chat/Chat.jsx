@@ -18,6 +18,10 @@ function Chat() {
     acceptCall,
     hangUp,
     declineCall,
+    toggleCamera,
+    toggleMic,
+    isMuted,
+    cameraOn,
     localStream,
     remoteStream,
     calling,
@@ -64,6 +68,10 @@ function Chat() {
             onClose={() => {
               hangUp(user.uid);
             }}
+            toggleCamera={toggleCamera}
+            toggleMic={toggleMic}
+            cameraOn={cameraOn}
+            isMuted={isMuted}
           />
         )}
       </div>

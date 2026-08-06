@@ -30,13 +30,17 @@ export function createPeerConnection(onIceCandidate, onRemoteStream) {
 }
 
 export async function getLocalStream() {
-  return await navigator.mediaDevices.getUserMedia({
-    video: {
-      width: 1280,
-      height: 720,
-    },
-    audio: true,
-  });
+  const stream = await navigator.mediaDevices.getUserMedia({
+  audio: true,
+  video: {
+    width: 640,
+    height: 480,
+  },
+});
+stream.getVideoTracks().forEach(track=>{
+    track.enabled = false;
+});
+return stream;
 }
 
 export function addTracks(pc, stream) {
