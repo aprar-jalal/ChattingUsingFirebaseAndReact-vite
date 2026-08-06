@@ -60,9 +60,9 @@ function VideoCall({
             </>
           ) : (
             <div className={styles.audioCallScreen}>
-              <img src={otherUser.photoURL || "/avatar.png"} className={styles.avatar} />
+              <img src={otherUser?.photoURL || "/avatar.png"} className={styles.avatar} />
 
-              <h2 className={styles.userName}>{otherUser.Name}</h2>
+              <h2 className={styles.userName}>{otherUser?.Name}</h2>
 
               <p className={styles.callTimer}>00:00</p>
             </div>
